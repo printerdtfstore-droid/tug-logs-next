@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
 import DynamicForm from './DynamicForm';
@@ -12,7 +11,23 @@ export default async function FillPage({
   const supabase = await supabaseServer();
 
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect('/login');
+  if (!auth.user) {
+    return (
+      <div className="min-h-dvh bg-slate-50 p-6">
+        <div className="mx-auto max-w-xl rounded-2xl border bg-white p-6">
+          <h1 className="text-xl font-black">Sign in required</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Filling logs requires an account. You can sign in and come back to this task.
+          </p>
+          <div className="mt-4">
+            <Link className="underline" href="/login">
+              Go to login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const { data: task, error: taskErr } = await supabase
     .from('tasks')

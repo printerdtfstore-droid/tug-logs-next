@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
 import { isAdminEmail } from '@/lib/admin';
@@ -7,7 +6,21 @@ import BackfillForm from './BackfillForm';
 export default async function AdminBackfillPage() {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect('/login');
+  if (!auth.user) {
+    return (
+      <div className="min-h-dvh bg-slate-50 p-6">
+        <div className="mx-auto max-w-2xl rounded-2xl border bg-white p-6">
+          <h1 className="text-xl font-black">Admin Backfill</h1>
+          <p className="mt-2 text-sm text-slate-600">Sign in required.</p>
+          <div className="mt-4">
+            <Link className="underline" href="/login">
+              Go to login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAdminEmail(auth.user.email)) {
     return (

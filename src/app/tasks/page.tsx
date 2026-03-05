@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
 import { signOut } from '../login/actions';
@@ -30,7 +29,6 @@ export default async function TasksPage({
 
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) redirect('/login');
 
   const { data: vessels } = await supabase
     .from('vessels')
@@ -102,11 +100,19 @@ export default async function TasksPage({
             ))}
           </nav>
 
-          <form action={signOut} className="mt-6">
-            <button className="w-full rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold hover:bg-white/15">
-              Sign out
-            </button>
-          </form>
+          {auth.user ? (
+            <form action={signOut} className="mt-6">
+              <button className="w-full rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold hover:bg-white/15">
+                Sign out
+              </button>
+            </form>
+          ) : (
+            <div className="mt-6">
+              <Link className="block w-full rounded-xl bg-white/10 px-3 py-2 text-center text-sm font-semibold hover:bg-white/15" href="/login">
+                Sign in
+              </Link>
+            </div>
+          )}
         </aside>
 
         {/* Main */}
@@ -136,7 +142,7 @@ export default async function TasksPage({
                 ))}
               </div>
               <div className="rounded-full border px-3 py-1 text-xs font-semibold text-slate-700">
-                {auth.user.email}
+                {auth.user?.email ?? 'Guest'}
               </div>
             </div>
           </header>
