@@ -199,7 +199,7 @@ export default async function TasksPage({
                           </span>
                         ) : null}
                         <Link
-                          href={`/tasks/${encodeURIComponent(task.id)}`}
+                          href={`/fill/${encodeURIComponent(task.id)}`}
                           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
                         >
                           Start
