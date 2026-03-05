@@ -54,6 +54,7 @@ export default async function FillPage({
   }
 
   if (!submissionId) throw new Error('Failed to create draft submission');
+  const sid = submissionId;
 
   const { data: fields, error: fieldsErr } = await supabase
     .from('form_fields')
@@ -69,7 +70,7 @@ export default async function FillPage({
     .select(
       'field_id,value_text,value_option_text,value_time_text,value_time_text_a,value_time_text_b'
     )
-    .eq('submission_id', submissionId);
+    .eq('submission_id', sid);
   if (ansErr) throw ansErr;
 
   const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim();
@@ -96,7 +97,7 @@ export default async function FillPage({
 
         <div className="rounded-2xl border bg-white p-4">
           <DynamicForm
-            submissionId={submissionId}
+            submissionId={sid}
             fields={fields ?? []}
             existing={answers ?? []}
             onSubmittedUrl="/tasks?segment=history"
