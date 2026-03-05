@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
 import { signOut } from '../login/actions';
+import VesselSelect from '@/components/VesselSelect';
 
 type Segment = 'this_week' | 'beyond' | 'on_demand' | 'backfill' | 'history';
 
@@ -71,22 +72,11 @@ export default async function TasksPage({
 
           <div className="mt-4 rounded-xl border border-white/20 bg-white/10 p-3 text-sm">
             <div className="opacity-80">Vessel</div>
-            <div className="mt-1 font-semibold">
-              {vessels?.find((v) => v.id === vesselId)?.name ?? '—'}
-            </div>
-            <div className="mt-2 space-y-1">
-              {(vessels ?? []).map((v) => (
-                <Link
-                  key={v.id}
-                  className={`block rounded-lg px-2 py-1 text-sm ${
-                    v.id === vesselId ? 'bg-white/15' : 'hover:bg-white/10'
-                  }`}
-                  href={`/tasks?vesselId=${encodeURIComponent(v.id)}&segment=${segment}`}
-                >
-                  {v.name}
-                </Link>
-              ))}
-            </div>
+            <VesselSelect
+              vessels={(vessels ?? []).map((v) => ({ id: v.id, name: v.name }))}
+              value={vesselId}
+              segment={segment}
+            />
           </div>
 
           <nav className="mt-4 space-y-1 text-sm font-semibold">
