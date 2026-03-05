@@ -9,7 +9,7 @@ export default async function FillPage({
   params: Promise<{ taskId: string }>;
 }) {
   const { taskId } = await params;
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
 
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
@@ -35,7 +35,7 @@ export default async function FillPage({
     .eq('status', 'Draft')
     .maybeSingle();
 
-  let submissionId = existingDraft?.id as string | undefined;
+  let submissionId: string | undefined = existingDraft?.id as string | undefined;
 
   if (!submissionId) {
     const { data: created, error: createErr } = await supabase
@@ -52,6 +52,8 @@ export default async function FillPage({
     if (createErr) throw createErr;
     submissionId = created.id;
   }
+
+  if (!submissionId) throw new Error('Failed to create draft submission');
 
   const { data: fields, error: fieldsErr } = await supabase
     .from('form_fields')

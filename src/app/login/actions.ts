@@ -7,7 +7,7 @@ export async function signIn(formData: FormData) {
   const email = String(formData.get('email') || '').trim();
   const password = String(formData.get('password') || '').trim();
 
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
@@ -16,7 +16,7 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
   await supabase.auth.signOut();
   redirect('/login');
 }

@@ -11,7 +11,7 @@ export async function saveAnswer(input: {
   value_time_text_a?: string | null;
   value_time_text_b?: string | null;
 }) {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   if (authErr) throw authErr;
@@ -78,7 +78,7 @@ export async function saveAnswer(input: {
 }
 
 export async function submitForm(input: { submissionId: string }) {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   if (authErr) throw authErr;

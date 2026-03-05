@@ -5,7 +5,7 @@ import { isAdminEmail } from '@/lib/admin';
 import BackfillForm from './BackfillForm';
 
 export default async function AdminBackfillPage() {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
 

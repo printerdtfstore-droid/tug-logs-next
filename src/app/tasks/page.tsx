@@ -28,7 +28,7 @@ export default async function TasksPage({
   const sp = await searchParams;
   const segment: Segment = sp.segment ?? 'this_week';
 
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect('/login');
 

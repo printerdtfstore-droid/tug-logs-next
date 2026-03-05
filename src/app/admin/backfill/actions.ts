@@ -9,7 +9,7 @@ export async function runBackfill(input: {
   start_date: string;
   end_date: string;
 }) {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error('Not authenticated');
 
