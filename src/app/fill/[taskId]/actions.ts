@@ -1,6 +1,7 @@
 'use server';
 
 import { supabaseServer } from '@/lib/supabase/server';
+import { sendActivityEmail } from '@/lib/email';
 
 export async function saveAnswer(input: {
   submissionId: string;
@@ -107,7 +108,7 @@ export async function submitForm(input: { submissionId: string }) {
     .eq('required', true);
   if (reqErr) throw reqErr;
 
-  const { error: updTaskErr } = await supabase
+  const { data: updatedTask, error: updTaskErr } = await supabase
     .from('tasks')
     .update({
       status: 'Submitted',
@@ -116,8 +117,31 @@ export async function submitForm(input: { submissionId: string }) {
       answered_count: requiredCount ?? 0,
       required_count: requiredCount ?? 0,
     })
-    .eq('id', submission.task_id);
+    .eq('id', submission.task_id)
+    .select('id,recorded_date, due_at, vessel_id, template_id, vessels(name), form_templates(code,title)')
+    .single();
   if (updTaskErr) throw updTaskErr;
+
+  const vesselName =
+    (updatedTask as unknown as { vessels?: { name?: string } }).vessels?.name ??
+    '';
+  const tpl = (updatedTask as unknown as {
+    form_templates?: { code?: string; title?: string };
+  }).form_templates;
+  const tplTitle = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim();
+
+  // Fire-and-forget is tempting, but we want failures visible in logs; don't block UI too long.
+  await sendActivityEmail({
+    subject: `Tug Logs submitted: ${tplTitle || 'Log'}`,
+    html: `
+      <h2>Tug Logs — Log Submitted</h2>
+      <p><b>Vessel:</b> ${vesselName || updatedTask.vessel_id}</p>
+      <p><b>Template:</b> ${tplTitle || updatedTask.template_id}</p>
+      <p><b>Recorded date:</b> ${updatedTask.recorded_date}</p>
+      <p><b>Submitted by:</b> ${auth.user.email ?? auth.user.id}</p>
+      <p><b>Submitted at:</b> ${now}</p>
+    `,
+  });
 
   return { ok: true };
 }

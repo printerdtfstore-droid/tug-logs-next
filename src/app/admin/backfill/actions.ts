@@ -2,6 +2,7 @@
 
 import { supabaseServer } from '@/lib/supabase/server';
 import { isAdminEmail } from '@/lib/admin';
+import { sendActivityEmail } from '@/lib/email';
 
 export async function runBackfill(input: {
   vessel_id: string;
@@ -27,5 +28,19 @@ export async function runBackfill(input: {
   });
   if (error) throw error;
 
-  return { created: data as number };
+  const created = data as number;
+
+  await sendActivityEmail({
+    subject: `Tug Logs backfill: created ${created} tasks`,
+    html: `
+      <h2>Tug Logs — Backfill</h2>
+      <p><b>Vessel ID:</b> ${input.vessel_id}</p>
+      <p><b>Template ID:</b> ${input.template_id}</p>
+      <p><b>Date range:</b> ${input.start_date} → ${input.end_date}</p>
+      <p><b>Created:</b> ${created}</p>
+      <p><b>Run by:</b> ${auth.user.email ?? auth.user.id}</p>
+    `,
+  });
+
+  return { created };
 }
