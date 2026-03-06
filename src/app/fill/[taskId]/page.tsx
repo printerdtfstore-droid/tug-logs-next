@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
 import DynamicForm from './DynamicForm';
+import RecordedDatePicker from './RecordedDatePicker';
 
 export default async function FillPage({
   params,
@@ -108,6 +109,14 @@ export default async function FillPage({
           <Link className="underline" href="/tasks">
             Back
           </Link>
+        </div>
+
+        <div className="mb-4">
+          <RecordedDatePicker
+            taskId={task.id}
+            recordedDate={task.recorded_date}
+            disabled={task.status === 'Submitted'}
+          />
         </div>
 
         <div className="rounded-2xl border bg-white p-4">

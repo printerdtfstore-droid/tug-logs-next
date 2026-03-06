@@ -78,6 +78,33 @@ export async function saveAnswer(input: {
   return { ok: true, answeredRequired };
 }
 
+export async function updateRecordedDate(input: {
+  taskId: string;
+  recordedDate: string;
+}) {
+  const supabase = await supabaseServer();
+
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  if (!auth.user) throw new Error('Not authenticated');
+
+  const { data: task, error: tErr } = await supabase
+    .from('tasks')
+    .select('id,status')
+    .eq('id', input.taskId)
+    .single();
+  if (tErr) throw tErr;
+  if (task.status === 'Submitted') throw new Error('Already submitted');
+
+  const { error: upErr } = await supabase
+    .from('tasks')
+    .update({ recorded_date: input.recordedDate })
+    .eq('id', input.taskId);
+  if (upErr) throw upErr;
+
+  return { ok: true };
+}
+
 export async function submitForm(input: { submissionId: string }) {
   const supabase = await supabaseServer();
 
