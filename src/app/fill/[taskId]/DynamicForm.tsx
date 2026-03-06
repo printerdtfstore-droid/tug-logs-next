@@ -136,8 +136,8 @@ export default function DynamicForm({
               {f.field_type === 'time' ? (
                 <input
                   defaultValue={a?.value_time_text ?? ''}
-                  type="text"
-                  placeholder="HH:MM"
+                  type="time"
+                  step={300}
                   className="w-full rounded-xl border px-3 py-2"
                   onBlur={(e) =>
                     setSave(f.id, { value_time_text: e.currentTarget.value })
@@ -154,8 +154,8 @@ export default function DynamicForm({
                     <input
                       id={`${f.id}-a`}
                       defaultValue={a?.value_time_text_a ?? ''}
-                      type="text"
-                      placeholder="HH:MM"
+                      type="time"
+                      step={300}
                       className="mt-1 w-full rounded-xl border px-3 py-2"
                       onBlur={(e) =>
                         setSave(f.id, {
@@ -177,8 +177,8 @@ export default function DynamicForm({
                     <input
                       id={`${f.id}-b`}
                       defaultValue={a?.value_time_text_b ?? ''}
-                      type="text"
-                      placeholder="HH:MM"
+                      type="time"
+                      step={300}
                       className="mt-1 w-full rounded-xl border px-3 py-2"
                       onBlur={(e) =>
                         setSave(f.id, {
