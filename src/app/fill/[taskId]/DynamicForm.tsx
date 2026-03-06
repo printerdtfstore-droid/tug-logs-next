@@ -55,6 +55,16 @@ export default function DynamicForm({
     }
   );
 
+  const timeOptions = useMemo(() => {
+    const opts: string[] = [''];
+    for (let mins = 0; mins < 24 * 60; mins += 5) {
+      const hh = String(Math.floor(mins / 60)).padStart(2, '0');
+      const mm = String(mins % 60).padStart(2, '0');
+      opts.push(`${hh}:${mm}`);
+    }
+    return opts;
+  }, []);
+
   function setSave(
     fieldId: string,
     payload: Record<string, string | null | undefined>
@@ -80,15 +90,7 @@ export default function DynamicForm({
         </div>
       ) : null}
 
-      <datalist id="time-options">
-        {Array.from({ length: 24 * 12 }).map((_, i) => {
-          const mins = i * 5;
-          const hh = String(Math.floor(mins / 60)).padStart(2, '0');
-          const mm = String(mins % 60).padStart(2, '0');
-          const v = `${hh}:${mm}`;
-          return <option key={v} value={v} />;
-        })}
-      </datalist>
+
 
       {fields.map((f) => {
         const a = byField.get(f.id);
@@ -145,19 +147,19 @@ export default function DynamicForm({
               ) : null}
 
               {f.field_type === 'time' ? (
-                <>
-                  <input
-                    list="time-options"
-                    defaultValue={a?.value_time_text ?? ''}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="HH:MM"
-                    className="w-full rounded-xl border px-3 py-2"
-                    onBlur={(e) =>
-                      setSave(f.id, { value_time_text: e.currentTarget.value })
-                    }
-                  />
-                </>
+                <select
+                  defaultValue={a?.value_time_text ?? ''}
+                  className="w-full rounded-xl border px-3 py-2"
+                  onChange={(e) =>
+                    setSave(f.id, { value_time_text: e.currentTarget.value })
+                  }
+                >
+                  {timeOptions.map((t) => (
+                    <option key={t || 'blank'} value={t}>
+                      {t || '—'}
+                    </option>
+                  ))}
+                </select>
               ) : null}
 
               {f.field_type === 'time_range' ? (
@@ -166,51 +168,55 @@ export default function DynamicForm({
                     <div className="text-xs font-bold text-slate-600">
                       {f.sub_label_a ?? 'On'}
                     </div>
-                    <input
+                    <select
                       id={`${f.id}-a`}
-                      list="time-options"
                       defaultValue={a?.value_time_text_a ?? ''}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="HH:MM"
                       className="mt-1 w-full rounded-xl border px-3 py-2"
-                      onBlur={(e) =>
+                      onChange={(e) =>
                         setSave(f.id, {
                           value_time_text_a: e.currentTarget.value,
                           value_time_text_b:
                             (document.getElementById(
                               `${f.id}-b`
-                            ) as HTMLInputElement | null)?.value ??
+                            ) as HTMLSelectElement | null)?.value ??
                             a?.value_time_text_b ??
                             '',
                         })
                       }
-                    />
+                    >
+                      {timeOptions.map((t) => (
+                        <option key={t || 'blank'} value={t}>
+                          {t || '—'}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label className="block">
                     <div className="text-xs font-bold text-slate-600">
                       {f.sub_label_b ?? 'Off'}
                     </div>
-                    <input
+                    <select
                       id={`${f.id}-b`}
-                      list="time-options"
                       defaultValue={a?.value_time_text_b ?? ''}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="HH:MM"
                       className="mt-1 w-full rounded-xl border px-3 py-2"
-                      onBlur={(e) =>
+                      onChange={(e) =>
                         setSave(f.id, {
                           value_time_text_b: e.currentTarget.value,
                           value_time_text_a:
                             (document.getElementById(
                               `${f.id}-a`
-                            ) as HTMLInputElement | null)?.value ??
+                            ) as HTMLSelectElement | null)?.value ??
                             a?.value_time_text_a ??
                             '',
                         })
                       }
-                    />
+                    >
+                      {timeOptions.map((t) => (
+                        <option key={t || 'blank'} value={t}>
+                          {t || '—'}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 </div>
               ) : null}
