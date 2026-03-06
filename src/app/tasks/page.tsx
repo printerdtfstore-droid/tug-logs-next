@@ -194,12 +194,21 @@ export default async function TasksPage({
                             BACKFILL
                           </span>
                         ) : null}
-                        <Link
-                          href={`/fill/${encodeURIComponent(task.id)}`}
-                          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
-                        >
-                          Start
-                        </Link>
+                        {task.status === 'Submitted' ? (
+                          <Link
+                            href={`/view/${encodeURIComponent(task.id)}`}
+                            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
+                          >
+                            View
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/fill/${encodeURIComponent(task.id)}`}
+                            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
+                          >
+                            Start
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );
