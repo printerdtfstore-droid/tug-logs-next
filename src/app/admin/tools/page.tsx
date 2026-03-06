@@ -7,6 +7,7 @@ import {
   adminGenerateToday,
   adminGenerateTodayFrm006703,
   adminGenerateFrm006706ThisYear,
+  adminGenerateFrm006707ThisYear,
 } from './actions';
 
 function centralYMD(d = new Date()) {
@@ -125,6 +126,15 @@ export default async function AdminToolsPage() {
           <form action={adminGenerateFrm006706ThisYear} className="mt-3">
             <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-black text-white">
               Generate FRM006706 for {new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric' })}
+            </button>
+          </form>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-6">
+          <h2 className="text-sm font-black">FRM006707 — Generate this year (March 1 @ 21:59)</h2>
+          <form action={adminGenerateFrm006707ThisYear} className="mt-3">
+            <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-black text-white">
+              Generate FRM006707 for {new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric' })}
             </button>
           </form>
         </div>

@@ -6,6 +6,7 @@ import {
   generateFrm006702Tasks,
   generateFrm006703Tasks,
   generateFrm006706ForYear,
+  generateFrm006707ForYear,
   clearSubmittedHistory,
 } from '@/lib/generateFrm006702';
 
@@ -50,6 +51,17 @@ export async function adminBackfillFrm006702(formData: FormData) {
   const endDate = String(formData.get('endDate') || '').trim();
   if (!startDate || !endDate) throw new Error('Missing date range');
   await generateFrm006702Tasks({ startDate, endDate });
+}
+
+export async function adminGenerateFrm006707ThisYear() {
+  await requireAdmin();
+  const year = Number(
+    new Date().toLocaleDateString('en-US', {
+      timeZone: 'America/Chicago',
+      year: 'numeric',
+    })
+  );
+  await generateFrm006707ForYear(year);
 }
 
 export async function adminClearHistory() {
