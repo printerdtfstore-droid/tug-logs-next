@@ -94,7 +94,6 @@ export async function updateRecordedDate(input: {
     .eq('id', input.taskId)
     .single();
   if (tErr) throw tErr;
-  if (task.status === 'Submitted') throw new Error('Already submitted');
 
   // If a task already exists for that date/slot, redirect to it instead of failing.
   let exQ = supabase

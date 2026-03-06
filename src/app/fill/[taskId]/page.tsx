@@ -115,7 +115,7 @@ export default async function FillPage({
           <RecordedDatePicker
             taskId={task.id}
             recordedDate={task.recorded_date}
-            disabled={task.status === 'Submitted'}
+            disabled={false}
           />
         </div>
 
