@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
 import { signOut } from '../login/actions';
 import VesselSelect from '@/components/VesselSelect';
+import OnDemandTemplates from './OnDemandTemplates';
 
 type Segment = 'this_week' | 'beyond' | 'on_demand' | 'backfill' | 'history';
 
@@ -62,6 +63,14 @@ export default async function TasksPage({
   }
 
   const { data: tasks, error } = await q;
+
+  const { data: onDemandTemplates } = segment === 'on_demand'
+    ? await supabase
+        .from('form_templates')
+        .select('id,code,title,category,active')
+        .eq('active', true)
+        .order('code')
+    : { data: [] as { id: string; code: string; title: string; category: string | null; active: boolean }[] };
 
   return (
     <div className="min-h-dvh bg-slate-50">
@@ -163,8 +172,19 @@ export default async function TasksPage({
                 </div>
               ) : null}
 
-              <div className="space-y-3">
-                {(tasks ?? []).map((task) => {
+              {segment === 'on_demand' ? (
+                <OnDemandTemplates
+                  vesselId={vesselId}
+                  templates={(onDemandTemplates ?? []).map((t) => ({
+                    id: t.id,
+                    code: t.code,
+                    title: t.title,
+                    category: t.category,
+                  }))}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {(tasks ?? []).map((task) => {
                   const tpl = (task as unknown as { form_templates?: { code: string; title: string } }).form_templates;
                   const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim() || 'Task';
                   const meta = task.is_backfilled
@@ -220,6 +240,7 @@ export default async function TasksPage({
                   </div>
                 )}
               </div>
+              )}
 
               <div className="mt-4 text-sm">
                 <Link className="underline" href="/admin/backfill">
