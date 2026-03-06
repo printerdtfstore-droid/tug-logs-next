@@ -6,6 +6,9 @@ function centralYMD(d = new Date()) {
 }
 
 function requireCronAuth(req: Request) {
+  // Vercel Cron requests include this header.
+  if (req.headers.get('x-vercel-cron')) return;
+
   const secret = process.env.CRON_SECRET;
   if (!secret) return; // allow if not set (dev)
   const auth = req.headers.get('authorization') || '';
