@@ -31,8 +31,13 @@ export default function RecordedDatePicker({
             setError(null);
             startTransition(async () => {
               try {
-                await updateRecordedDate({ taskId, recordedDate: next });
-                window.location.reload();
+                const res = await updateRecordedDate({ taskId, recordedDate: next });
+                const redirectId = (res as unknown as { redirectTaskId?: string }).redirectTaskId;
+                if (redirectId) {
+                  window.location.href = `/fill/${encodeURIComponent(redirectId)}`;
+                } else {
+                  window.location.reload();
+                }
               } catch (e: unknown) {
                 setError(e instanceof Error ? e.message : 'Failed to update');
               }
