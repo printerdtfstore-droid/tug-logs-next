@@ -90,7 +90,11 @@ export default function DynamicForm({
         </div>
       ) : null}
 
-
+      <datalist id="time-options">
+        {timeOptions.filter(Boolean).map((t) => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
 
       {fields.map((f) => {
         const a = byField.get(f.id);
@@ -147,19 +151,38 @@ export default function DynamicForm({
               ) : null}
 
               {f.field_type === 'time' ? (
-                <select
-                  defaultValue={a?.value_time_text ?? ''}
-                  className="w-full rounded-xl border px-3 py-2"
-                  onChange={(e) =>
-                    setSave(f.id, { value_time_text: e.currentTarget.value })
-                  }
-                >
-                  {timeOptions.map((t) => (
-                    <option key={t || 'blank'} value={t}>
-                      {t || '—'}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    id={`${f.id}-t`}
+                    list="time-options"
+                    defaultValue={a?.value_time_text ?? ''}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="HH:MM"
+                    className="min-w-[180px] flex-1 rounded-xl border px-3 py-2"
+                    onBlur={(e) =>
+                      setSave(f.id, { value_time_text: e.currentTarget.value })
+                    }
+                  />
+                  <select
+                    defaultValue={a?.value_time_text ?? ''}
+                    className="rounded-xl border px-3 py-2"
+                    onChange={(e) => {
+                      const v = e.currentTarget.value;
+                      const el = document.getElementById(
+                        `${f.id}-t`
+                      ) as HTMLInputElement | null;
+                      if (el) el.value = v;
+                      setSave(f.id, { value_time_text: v });
+                    }}
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t || 'blank'} value={t}>
+                        {t || '—'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               ) : null}
 
               {f.field_type === 'time_range' ? (
@@ -168,55 +191,107 @@ export default function DynamicForm({
                     <div className="text-xs font-bold text-slate-600">
                       {f.sub_label_a ?? 'On'}
                     </div>
-                    <select
-                      id={`${f.id}-a`}
-                      defaultValue={a?.value_time_text_a ?? ''}
-                      className="mt-1 w-full rounded-xl border px-3 py-2"
-                      onChange={(e) =>
-                        setSave(f.id, {
-                          value_time_text_a: e.currentTarget.value,
-                          value_time_text_b:
-                            (document.getElementById(
-                              `${f.id}-b`
-                            ) as HTMLSelectElement | null)?.value ??
-                            a?.value_time_text_b ??
-                            '',
-                        })
-                      }
-                    >
-                      {timeOptions.map((t) => (
-                        <option key={t || 'blank'} value={t}>
-                          {t || '—'}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <input
+                        id={`${f.id}-a`}
+                        list="time-options"
+                        defaultValue={a?.value_time_text_a ?? ''}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="HH:MM"
+                        className="min-w-[140px] flex-1 rounded-xl border px-3 py-2"
+                        onBlur={(e) =>
+                          setSave(f.id, {
+                            value_time_text_a: e.currentTarget.value,
+                            value_time_text_b:
+                              (document.getElementById(
+                                `${f.id}-b`
+                              ) as HTMLInputElement | null)?.value ??
+                              a?.value_time_text_b ??
+                              '',
+                          })
+                        }
+                      />
+                      <select
+                        defaultValue={a?.value_time_text_a ?? ''}
+                        className="rounded-xl border px-3 py-2"
+                        onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          const el = document.getElementById(
+                            `${f.id}-a`
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = v;
+                          setSave(f.id, {
+                            value_time_text_a: v,
+                            value_time_text_b:
+                              (document.getElementById(
+                                `${f.id}-b`
+                              ) as HTMLInputElement | null)?.value ??
+                              a?.value_time_text_b ??
+                              '',
+                          });
+                        }}
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t || 'blank'} value={t}>
+                            {t || '—'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </label>
                   <label className="block">
                     <div className="text-xs font-bold text-slate-600">
                       {f.sub_label_b ?? 'Off'}
                     </div>
-                    <select
-                      id={`${f.id}-b`}
-                      defaultValue={a?.value_time_text_b ?? ''}
-                      className="mt-1 w-full rounded-xl border px-3 py-2"
-                      onChange={(e) =>
-                        setSave(f.id, {
-                          value_time_text_b: e.currentTarget.value,
-                          value_time_text_a:
-                            (document.getElementById(
-                              `${f.id}-a`
-                            ) as HTMLSelectElement | null)?.value ??
-                            a?.value_time_text_a ??
-                            '',
-                        })
-                      }
-                    >
-                      {timeOptions.map((t) => (
-                        <option key={t || 'blank'} value={t}>
-                          {t || '—'}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <input
+                        id={`${f.id}-b`}
+                        list="time-options"
+                        defaultValue={a?.value_time_text_b ?? ''}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="HH:MM"
+                        className="min-w-[140px] flex-1 rounded-xl border px-3 py-2"
+                        onBlur={(e) =>
+                          setSave(f.id, {
+                            value_time_text_b: e.currentTarget.value,
+                            value_time_text_a:
+                              (document.getElementById(
+                                `${f.id}-a`
+                              ) as HTMLInputElement | null)?.value ??
+                              a?.value_time_text_a ??
+                              '',
+                          })
+                        }
+                      />
+                      <select
+                        defaultValue={a?.value_time_text_b ?? ''}
+                        className="rounded-xl border px-3 py-2"
+                        onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          const el = document.getElementById(
+                            `${f.id}-b`
+                          ) as HTMLInputElement | null;
+                          if (el) el.value = v;
+                          setSave(f.id, {
+                            value_time_text_b: v,
+                            value_time_text_a:
+                              (document.getElementById(
+                                `${f.id}-a`
+                              ) as HTMLInputElement | null)?.value ??
+                              a?.value_time_text_a ??
+                              '',
+                          });
+                        }}
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t || 'blank'} value={t}>
+                            {t || '—'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </label>
                 </div>
               ) : null}
