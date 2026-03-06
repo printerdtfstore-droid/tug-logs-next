@@ -45,6 +45,16 @@ export default function DynamicForm({
     return map;
   }, [existing]);
 
+  const [optionByFieldId, setOptionByFieldId] = useState<Record<string, string>>(
+    () => {
+      const init: Record<string, string> = {};
+      for (const a of existing) {
+        if (a.value_option_text) init[a.field_id] = a.value_option_text;
+      }
+      return init;
+    }
+  );
+
   function setSave(
     fieldId: string,
     payload: Record<string, string | null | undefined>
@@ -189,7 +199,7 @@ export default function DynamicForm({
               {f.field_type === 'button_choice' ? (
                 <div className="flex flex-wrap gap-2">
                   {(f.choices ?? []).map((c) => {
-                    const active = (a?.value_option_text ?? '') === c;
+                    const active = (optionByFieldId[f.id] ?? a?.value_option_text ?? '') === c;
                     return (
                       <button
                         key={c}
@@ -199,9 +209,10 @@ export default function DynamicForm({
                             ? 'bg-emerald-700 text-white border-emerald-700'
                             : 'bg-slate-50'
                         }`}
-                        onClick={() =>
-                          setSave(f.id, { value_option_text: c })
-                        }
+                        onClick={() => {
+                          setOptionByFieldId((prev) => ({ ...prev, [f.id]: c }));
+                          setSave(f.id, { value_option_text: c });
+                        }}
                       >
                         {c}
                       </button>
