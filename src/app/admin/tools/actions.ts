@@ -2,7 +2,11 @@
 
 import { supabaseServer } from '@/lib/supabase/server';
 import { isAdminEmail } from '@/lib/admin';
-import { generateFrm006702Tasks, clearSubmittedHistory } from '@/lib/generateFrm006702';
+import {
+  generateFrm006702Tasks,
+  generateFrm006703Tasks,
+  clearSubmittedHistory,
+} from '@/lib/generateFrm006702';
 
 function centralYMD(d = new Date()) {
   return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
@@ -20,6 +24,12 @@ export async function adminGenerateToday() {
   await requireAdmin();
   const today = centralYMD();
   await generateFrm006702Tasks({ startDate: today, endDate: today });
+}
+
+export async function adminGenerateTodayFrm006703() {
+  await requireAdmin();
+  const today = centralYMD();
+  await generateFrm006703Tasks({ startDate: today, endDate: today });
 }
 
 export async function adminBackfillFrm006702(formData: FormData) {

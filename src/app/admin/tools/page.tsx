@@ -5,6 +5,7 @@ import {
   adminBackfillFrm006702,
   adminClearHistory,
   adminGenerateToday,
+  adminGenerateTodayFrm006703,
 } from './actions';
 
 function centralYMD(d = new Date()) {
@@ -71,6 +72,15 @@ export default async function AdminToolsPage() {
         <div className="rounded-2xl border bg-white p-6">
           <h2 className="text-sm font-black">FRM006702 — Generate today (0600 + 1200)</h2>
           <form action={adminGenerateToday} className="mt-3">
+            <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-black text-white">
+              Generate today ({today})
+            </button>
+          </form>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-6">
+          <h2 className="text-sm font-black">FRM006703 — Generate today (0600)</h2>
+          <form action={adminGenerateTodayFrm006703} className="mt-3">
             <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-black text-white">
               Generate today ({today})
             </button>
