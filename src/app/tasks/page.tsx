@@ -64,7 +64,15 @@ export default async function TasksPage({
 
   const { data: tasks, error } = await q;
 
-  const { data: onDemandTemplates } = segment === 'on_demand' || segment === 'this_week'
+  const { data: onDemandTemplates } = segment === 'on_demand'
+    ? await supabase
+        .from('form_templates')
+        .select('id,code,title,category,active')
+        .eq('active', true)
+        .order('code')
+    : { data: [] as { id: string; code: string; title: string; category: string | null; active: boolean }[] };
+
+  const { data: quickStartTemplates } = segment === 'this_week'
     ? await supabase
         .from('form_templates')
         .select('id,code,title,category,active')
@@ -207,7 +215,7 @@ export default async function TasksPage({
                       <div className="mt-3">
                         <OnDemandTemplates
                           vesselId={vesselId}
-                          templates={(onDemandTemplates ?? []).map((t) => ({
+                          templates={(quickStartTemplates ?? []).map((t) => ({
                             id: t.id,
                             code: t.code,
                             title: t.title,
