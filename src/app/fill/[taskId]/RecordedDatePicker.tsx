@@ -25,13 +25,13 @@ export default function RecordedDatePicker({
           className="rounded-xl border px-3 py-2 text-sm"
           value={value}
           disabled={disabled || pending}
-          onChange={(e) => setValue(e.currentTarget.value)}
-          onBlur={() => {
+          onChange={(e) => {
+            const next = e.currentTarget.value;
+            setValue(next);
             setError(null);
             startTransition(async () => {
               try {
-                await updateRecordedDate({ taskId, recordedDate: value });
-                // refresh server data
+                await updateRecordedDate({ taskId, recordedDate: next });
                 window.location.reload();
               } catch (e: unknown) {
                 setError(e instanceof Error ? e.message : 'Failed to update');

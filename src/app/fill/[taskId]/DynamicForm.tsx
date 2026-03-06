@@ -79,6 +79,17 @@ export default function DynamicForm({
           {errorMsg}
         </div>
       ) : null}
+
+      <datalist id="time-options">
+        {Array.from({ length: 24 * 12 }).map((_, i) => {
+          const mins = i * 5;
+          const hh = String(Math.floor(mins / 60)).padStart(2, '0');
+          const mm = String(mins % 60).padStart(2, '0');
+          const v = `${hh}:${mm}`;
+          return <option key={v} value={v} />;
+        })}
+      </datalist>
+
       {fields.map((f) => {
         const a = byField.get(f.id);
         const label = f.qnum ? `${f.qnum} ${f.label}` : f.label;
@@ -134,15 +145,19 @@ export default function DynamicForm({
               ) : null}
 
               {f.field_type === 'time' ? (
-                <input
-                  defaultValue={a?.value_time_text ?? ''}
-                  type="time"
-                  step={300}
-                  className="w-full rounded-xl border px-3 py-2"
-                  onBlur={(e) =>
-                    setSave(f.id, { value_time_text: e.currentTarget.value })
-                  }
-                />
+                <>
+                  <input
+                    list="time-options"
+                    defaultValue={a?.value_time_text ?? ''}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="HH:MM"
+                    className="w-full rounded-xl border px-3 py-2"
+                    onBlur={(e) =>
+                      setSave(f.id, { value_time_text: e.currentTarget.value })
+                    }
+                  />
+                </>
               ) : null}
 
               {f.field_type === 'time_range' ? (
@@ -153,9 +168,11 @@ export default function DynamicForm({
                     </div>
                     <input
                       id={`${f.id}-a`}
+                      list="time-options"
                       defaultValue={a?.value_time_text_a ?? ''}
-                      type="time"
-                      step={300}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="HH:MM"
                       className="mt-1 w-full rounded-xl border px-3 py-2"
                       onBlur={(e) =>
                         setSave(f.id, {
@@ -176,9 +193,11 @@ export default function DynamicForm({
                     </div>
                     <input
                       id={`${f.id}-b`}
+                      list="time-options"
                       defaultValue={a?.value_time_text_b ?? ''}
-                      type="time"
-                      step={300}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="HH:MM"
                       className="mt-1 w-full rounded-xl border px-3 py-2"
                       onBlur={(e) =>
                         setSave(f.id, {
