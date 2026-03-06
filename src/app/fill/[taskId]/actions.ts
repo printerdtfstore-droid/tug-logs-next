@@ -97,15 +97,17 @@ export async function updateRecordedDate(input: {
   if (task.status === 'Submitted') throw new Error('Already submitted');
 
   // If a task already exists for that date/slot, redirect to it instead of failing.
-  const { data: existing, error: exErr } = await supabase
+  let exQ = supabase
     .from('tasks')
     .select('id')
     .eq('vessel_id', task.vessel_id)
     .eq('template_id', task.template_id)
     .eq('recorded_date', input.recordedDate)
-    .eq('due_slot', task.due_slot)
-    .neq('id', task.id)
-    .maybeSingle();
+    .neq('id', task.id);
+
+  exQ = task.due_slot ? exQ.eq('due_slot', task.due_slot) : exQ.is('due_slot', null);
+
+  const { data: existing, error: exErr } = await exQ.maybeSingle();
   if (exErr) throw exErr;
 
   if (existing?.id) {
