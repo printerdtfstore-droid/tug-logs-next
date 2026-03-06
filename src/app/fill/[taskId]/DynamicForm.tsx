@@ -73,6 +73,28 @@ export default function DynamicForm({
         const a = byField.get(f.id);
         const label = f.qnum ? `${f.qnum} ${f.label}` : f.label;
 
+        if (f.field_type === 'section') {
+          return (
+            <div
+              key={f.id}
+              className="rounded-2xl border bg-slate-50 px-4 py-3"
+            >
+              <div className="text-sm font-black text-slate-900">{label}</div>
+            </div>
+          );
+        }
+
+        if (f.field_type === 'info') {
+          return (
+            <div
+              key={f.id}
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
+              <div className="text-sm font-black text-slate-900">{label}</div>
+            </div>
+          );
+        }
+
         return (
           <div key={f.id} className="rounded-2xl border p-4">
             <div className="flex items-start justify-between gap-3">
