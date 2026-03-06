@@ -64,11 +64,12 @@ export default async function TasksPage({
 
   const { data: tasks, error } = await q;
 
-  const { data: onDemandTemplates } = segment === 'on_demand'
+  const { data: onDemandTemplates } = segment === 'on_demand' || segment === 'this_week'
     ? await supabase
         .from('form_templates')
         .select('id,code,title,category,active')
         .eq('active', true)
+        .in('code', ['FRM006702', 'FRM006703'])
         .order('code')
     : { data: [] as { id: string; code: string; title: string; category: string | null; active: boolean }[] };
 
@@ -184,6 +185,24 @@ export default async function TasksPage({
                 />
               ) : (
                 <div className="space-y-3">
+                  {segment === 'this_week' ? (
+                    <div className="rounded-2xl border bg-slate-50 p-4">
+                      <div className="text-xs font-black tracking-widest text-slate-700">
+                        QUICK START (ON DEMAND)
+                      </div>
+                      <div className="mt-3">
+                        <OnDemandTemplates
+                          vesselId={vesselId}
+                          templates={(onDemandTemplates ?? []).map((t) => ({
+                            id: t.id,
+                            code: t.code,
+                            title: t.title,
+                            category: t.category,
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
                   {(tasks ?? []).map((task) => {
                   const tpl = (task as unknown as { form_templates?: { code: string; title: string } }).form_templates;
                   const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim() || 'Task';
