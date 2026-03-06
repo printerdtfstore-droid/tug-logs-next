@@ -120,26 +120,40 @@ export default async function TasksPage({
           <header className="border-b bg-white p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-wrap gap-2">
-                {[
-                  'Wheelhouse',
-                  'Engine Log',
-                  'Worklists',
-                  'Audit / Survey',
-                  'JSA',
-                  'On Demand',
-                  'History',
-                ].map((t) => (
-                  <span
-                    key={t}
-                    className={`rounded-xl border px-3 py-1.5 text-xs font-bold ${
-                      t === 'Wheelhouse'
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-slate-50'
-                    }`}
-                  >
-                    {t}
-                  </span>
-                ))}
+                {(
+                  [
+                    { label: 'Wheelhouse', segment: 'this_week' as Segment },
+                    { label: 'Engine Log' },
+                    { label: 'Worklists' },
+                    { label: 'Audit / Survey' },
+                    { label: 'JSA' },
+                    { label: 'On Demand', segment: 'on_demand' as Segment },
+                    { label: 'History', segment: 'history' as Segment },
+                  ] as Array<{ label: string; segment?: Segment }>
+                ).map((t) => {
+                  const active = t.segment ? t.segment === segment : false;
+                  const cls = `rounded-xl border px-3 py-1.5 text-xs font-bold ${
+                    active ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50'
+                  }`;
+
+                  if (t.segment) {
+                    return (
+                      <Link
+                        key={t.label}
+                        href={`/tasks?vesselId=${encodeURIComponent(vesselId ?? '')}&segment=${t.segment}`}
+                        className={cls}
+                      >
+                        {t.label}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <span key={t.label} className={cls}>
+                      {t.label}
+                    </span>
+                  );
+                })}
               </div>
               <div className="rounded-full border px-3 py-1 text-xs font-semibold text-slate-700">
                 {auth.user?.email ?? 'Guest'}
