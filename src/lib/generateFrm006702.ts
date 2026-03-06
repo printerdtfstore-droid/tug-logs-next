@@ -162,6 +162,70 @@ export async function generateFrm006703Tasks(input: {
   return { ok: true, attempted: rows.length };
 }
 
+export async function generateFrm006706ForYear(year: number) {
+  const supabase = supabaseAdmin();
+
+  const { data: tpl, error: tplErr } = await supabase
+    .from('form_templates')
+    .select('id')
+    .eq('code', 'FRM006706')
+    .single();
+  if (tplErr) throw tplErr;
+
+  const { data: vessels, error: vErr } = await supabase
+    .from('vessels')
+    .select('id,name')
+    .in('name', ['Capt Russell L', 'Amazing Grace'])
+    .eq('active', true);
+  if (vErr) throw vErr;
+
+  const { count: reqCount, error: rcErr } = await supabase
+    .from('form_fields')
+    .select('id', { count: 'exact', head: true })
+    .eq('template_id', tpl.id)
+    .eq('required', true);
+  if (rcErr) throw rcErr;
+
+  const ymd = `${year}-03-07`;
+
+  type TaskRow = {
+    vessel_id: string;
+    template_id: string;
+    status: string;
+    due_type: string;
+    recorded_date: string;
+    due_slot: string;
+    due_at: string;
+    is_backfilled: boolean;
+    week_start_date: string | null;
+    required_count: number;
+    answered_count: number;
+  };
+
+  const rows: TaskRow[] = (vessels ?? []).map((v) => ({
+    vessel_id: v.id,
+    template_id: tpl.id,
+    status: 'Open',
+    due_type: 'Scheduled',
+    recorded_date: ymd,
+    due_slot: '2159',
+    // MVP fixed offset; good enough until we add DST logic
+    due_at: `${ymd}T21:59:00-06:00`,
+    is_backfilled: false,
+    week_start_date: null,
+    required_count: reqCount ?? 0,
+    answered_count: 0,
+  }));
+
+  const { error: upErr } = await supabase.from('tasks').upsert(rows, {
+    onConflict: 'vessel_id,template_id,recorded_date,due_slot',
+    ignoreDuplicates: true,
+  });
+  if (upErr) throw upErr;
+
+  return { ok: true, attempted: rows.length, year };
+}
+
 export async function clearSubmittedHistory() {
   const supabase = supabaseAdmin();
 

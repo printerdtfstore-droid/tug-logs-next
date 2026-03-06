@@ -6,6 +6,7 @@ import {
   adminClearHistory,
   adminGenerateToday,
   adminGenerateTodayFrm006703,
+  adminGenerateFrm006706ThisYear,
 } from './actions';
 
 function centralYMD(d = new Date()) {
@@ -117,6 +118,15 @@ export default async function AdminToolsPage() {
           <p className="mt-2 text-xs text-slate-500">
             This will attempt to create 2 tasks/day/vessel for the whole range.
           </p>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-6">
+          <h2 className="text-sm font-black">FRM006706 — Generate this year (March 7 @ 21:59)</h2>
+          <form action={adminGenerateFrm006706ThisYear} className="mt-3">
+            <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-black text-white">
+              Generate FRM006706 for {new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric' })}
+            </button>
+          </form>
         </div>
 
         <div className="rounded-2xl border bg-white p-6">

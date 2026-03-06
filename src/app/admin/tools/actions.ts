@@ -5,6 +5,7 @@ import { isAdminEmail } from '@/lib/admin';
 import {
   generateFrm006702Tasks,
   generateFrm006703Tasks,
+  generateFrm006706ForYear,
   clearSubmittedHistory,
 } from '@/lib/generateFrm006702';
 
@@ -30,6 +31,17 @@ export async function adminGenerateTodayFrm006703() {
   await requireAdmin();
   const today = centralYMD();
   await generateFrm006703Tasks({ startDate: today, endDate: today });
+}
+
+export async function adminGenerateFrm006706ThisYear() {
+  await requireAdmin();
+  const year = Number(
+    new Date().toLocaleDateString('en-US', {
+      timeZone: 'America/Chicago',
+      year: 'numeric',
+    })
+  );
+  await generateFrm006706ForYear(year);
 }
 
 export async function adminBackfillFrm006702(formData: FormData) {
