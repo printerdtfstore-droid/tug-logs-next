@@ -98,11 +98,20 @@ export default async function TasksPage({
           </div>
 
           <nav className="mt-4 space-y-1 text-sm font-semibold">
-            {['Logs', 'Personnel', 'Requisitions', 'Forms', 'Documents', 'Overview'].map((item) => (
-              <div
-                key={item}
-                className={`rounded-xl px-3 py-2 ${item === 'Logs' ? 'bg-white/15' : 'opacity-90'}`}
-              >
+            <div className="rounded-xl px-3 py-2 bg-white/15">Logs</div>
+            {['Personnel', 'Requisitions'].map((item) => (
+              <div key={item} className="rounded-xl px-3 py-2 opacity-90">
+                {item}
+              </div>
+            ))}
+            <Link
+              href={`/forms?vesselId=${encodeURIComponent(vesselId ?? '')}`}
+              className="block rounded-xl px-3 py-2 opacity-90 hover:bg-white/10"
+            >
+              Forms
+            </Link>
+            {['Documents', 'Overview'].map((item) => (
+              <div key={item} className="rounded-xl px-3 py-2 opacity-90">
                 {item}
               </div>
             ))}
