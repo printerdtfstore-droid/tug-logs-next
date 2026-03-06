@@ -37,6 +37,7 @@ export default function DynamicForm({
 }) {
   const [pending, startTransition] = useTransition();
   const [savingFieldId, setSavingFieldId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const byField = useMemo(() => {
     const map = new Map<string, ExistingAnswer>();
@@ -49,9 +50,12 @@ export default function DynamicForm({
     payload: Record<string, string | null | undefined>
   ) {
     setSavingFieldId(fieldId);
+    setErrorMsg(null);
     startTransition(async () => {
       try {
         await saveAnswer({ submissionId, fieldId, ...payload });
+      } catch (e: unknown) {
+        setErrorMsg(e instanceof Error ? e.message : 'Save failed');
       } finally {
         setSavingFieldId(null);
       }
@@ -60,6 +64,11 @@ export default function DynamicForm({
 
   return (
     <div className="space-y-4">
+      {errorMsg ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          {errorMsg}
+        </div>
+      ) : null}
       {fields.map((f) => {
         const a = byField.get(f.id);
         const label = f.qnum ? `${f.qnum} ${f.label}` : f.label;
@@ -189,8 +198,13 @@ export default function DynamicForm({
         className="w-full rounded-2xl bg-emerald-700 px-4 py-3 text-base font-black text-white disabled:opacity-60"
         onClick={() =>
           startTransition(async () => {
-            await submitForm({ submissionId });
-            window.location.href = onSubmittedUrl;
+            setErrorMsg(null);
+            try {
+              await submitForm({ submissionId });
+              window.location.href = onSubmittedUrl;
+            } catch (e: unknown) {
+              setErrorMsg(e instanceof Error ? e.message : 'Submit failed');
+            }
           })
         }
       >
