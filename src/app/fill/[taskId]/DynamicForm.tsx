@@ -83,7 +83,7 @@ export default function DynamicForm({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {errorMsg ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
           {errorMsg}
@@ -102,10 +102,7 @@ export default function DynamicForm({
 
         if (f.field_type === 'section') {
           return (
-            <div
-              key={f.id}
-              className="rounded-2xl border bg-slate-50 px-4 py-3"
-            >
+            <div key={f.id} className="rounded-xl border bg-slate-50 px-3 py-2">
               <div className="text-sm font-black text-slate-900">{label}</div>
             </div>
           );
@@ -113,17 +110,14 @@ export default function DynamicForm({
 
         if (f.field_type === 'info') {
           return (
-            <div
-              key={f.id}
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
+            <div key={f.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <div className="text-sm font-black text-slate-900">{label}</div>
             </div>
           );
         }
 
         return (
-          <div key={f.id} className="rounded-2xl border p-4">
+          <div key={f.id} className="rounded-xl border p-3">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-sm font-black">{label}</div>
