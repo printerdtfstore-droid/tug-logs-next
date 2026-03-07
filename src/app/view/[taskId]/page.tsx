@@ -92,9 +92,6 @@ export default async function ViewTaskPage({
             <div className="mt-1 text-sm text-slate-600">Vessel: {vessel?.name ?? '—'}</div>
             <div className="mt-1 text-xs text-slate-500">
               Recorded: {task.recorded_date}
-              {submission?.submitted_at
-                ? ` • Filled: ${new Date(submission.submitted_at).toLocaleString()}`
-                : ''}
             </div>
           </div>
           <div className="flex items-center gap-3">
