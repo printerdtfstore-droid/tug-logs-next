@@ -69,7 +69,7 @@ export default async function TasksPage({
         .from('form_templates')
         .select('id,code,title,category,active')
         .eq('active', true)
-        .in('code', ['FRM006702', 'FRM006703'])
+        .in('code', ['FRM006702', 'FRM006703', 'INS000224'])
         .order('code')
     : { data: [] as { id: string; code: string; title: string; category: string | null; active: boolean }[] };
 
