@@ -9,6 +9,7 @@ import {
   generateFrm006707ForYear,
   clearSubmittedHistory,
 } from '@/lib/generateFrm006702';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 function centralYMD(d = new Date()) {
   return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
@@ -67,4 +68,22 @@ export async function adminGenerateFrm006707ThisYear() {
 export async function adminClearHistory() {
   await requireAdmin();
   await clearSubmittedHistory();
+}
+
+export async function adminFixIns000224Header() {
+  await requireAdmin();
+
+  const supabase = supabaseAdmin();
+
+  const { error } = await supabase
+    .from('form_fields')
+    .update({
+      field_type: 'text',
+      sub_label_a: 'place holder to type in name',
+      required: true,
+      choices: [],
+    })
+    .eq('field_key', 'ins000224_inspected_by');
+
+  if (error) throw error;
 }

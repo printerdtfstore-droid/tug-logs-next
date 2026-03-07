@@ -8,6 +8,7 @@ import {
   adminGenerateTodayFrm006703,
   adminGenerateFrm006706ThisYear,
   adminGenerateFrm006707ThisYear,
+  adminFixIns000224Header,
 } from './actions';
 
 function centralYMD(d = new Date()) {
@@ -135,6 +136,18 @@ export default async function AdminToolsPage() {
           <form action={adminGenerateFrm006707ThisYear} className="mt-3">
             <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-black text-white">
               Generate FRM006707 for {new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', year: 'numeric' })}
+            </button>
+          </form>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-6">
+          <h2 className="text-sm font-black">INS000224 — Fix header (Inspected By placeholder)</h2>
+          <p className="mt-2 text-xs text-slate-500">
+            Sets INS000224 Inspected By to a normal text field and adds the placeholder.
+          </p>
+          <form action={adminFixIns000224Header} className="mt-3">
+            <button className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white">
+              Apply INS000224 header fix
             </button>
           </form>
         </div>
