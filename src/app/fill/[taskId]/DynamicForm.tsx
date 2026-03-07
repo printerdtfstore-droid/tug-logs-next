@@ -291,25 +291,23 @@ export default function DynamicForm({
               ) : null}
 
               {f.field_type === 'button_choice' ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
                   {(f.choices ?? []).map((c) => {
-                    const active = (optionByFieldId[f.id] ?? a?.value_option_text ?? '') === c;
+                    const active =
+                      (optionByFieldId[f.id] ?? a?.value_option_text ?? '') === c;
                     return (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`rounded-xl border px-4 py-2 text-sm font-black ${
-                          active
-                            ? 'bg-emerald-700 text-white border-emerald-700'
-                            : 'bg-slate-50'
-                        }`}
-                        onClick={() => {
-                          setOptionByFieldId((prev) => ({ ...prev, [f.id]: c }));
-                          setSave(f.id, { value_option_text: c });
-                        }}
-                      >
-                        {c}
-                      </button>
+                      <label key={c} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name={f.id}
+                          checked={active}
+                          onChange={() => {
+                            setOptionByFieldId((prev) => ({ ...prev, [f.id]: c }));
+                            setSave(f.id, { value_option_text: c });
+                          }}
+                        />
+                        <span className="font-semibold text-slate-900">{c}</span>
+                      </label>
                     );
                   })}
                 </div>
