@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import VesselSelect from '@/components/VesselSelect';
 import { signOut } from '@/app/login/actions';
 
@@ -28,10 +29,12 @@ export default async function DocumentsPage({
     created_at: string;
   };
 
-  const { data: docs } = await supabase
+  const admin = supabaseAdmin();
+  const { data: docs, error: docsErr } = await admin
     .from('documents')
     .select('id,title,template_code,file_path,created_at')
     .order('created_at', { ascending: false });
+  if (docsErr) throw docsErr;
 
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
 

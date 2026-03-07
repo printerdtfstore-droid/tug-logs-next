@@ -91,8 +91,10 @@ export default async function FillPage({
 
   const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim();
 
+  const { supabaseAdmin } = await import('@/lib/supabase/admin');
+  const admin = supabaseAdmin();
   const { data: refDoc } = tpl?.code
-    ? await supabase
+    ? await admin
         .from('documents')
         .select('file_path')
         .eq('template_code', tpl.code)
