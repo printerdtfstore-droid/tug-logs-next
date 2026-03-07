@@ -111,7 +111,7 @@ export default async function FillPage({
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const referencePdfUrl =
     refDoc?.file_path && supabaseUrl
-      ? `${supabaseUrl}/storage/v1/object/public/documents/${encodeURIComponent(
+      ? `${supabaseUrl}/storage/v1/object/public/DOCUMENTS/${encodeURIComponent(
           refDoc.file_path
         )}`
       : null;

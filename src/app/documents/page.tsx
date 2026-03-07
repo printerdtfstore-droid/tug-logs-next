@@ -118,7 +118,7 @@ export default async function DocumentsPage({
               <div className="mt-4 space-y-3">
                 {((docs ?? []) as unknown as DocRow[]).map((d) => {
                   const url = base
-                    ? `${base}/storage/v1/object/public/documents/${encodeURIComponent(d.file_path)}`
+                    ? `${base}/storage/v1/object/public/DOCUMENTS/${encodeURIComponent(d.file_path)}`
                     : '#';
                   return (
                     <div
