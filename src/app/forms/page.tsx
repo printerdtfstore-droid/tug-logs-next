@@ -86,11 +86,13 @@ export default async function FormsPage({
               </div>
             ))}
             <div className="rounded-xl px-3 py-2 bg-white/15">Forms</div>
-            {['Documents', 'Overview'].map((item) => (
-              <div key={item} className="rounded-xl px-3 py-2 opacity-90">
-                {item}
-              </div>
-            ))}
+            <Link
+              className="block rounded-xl px-3 py-2 opacity-90 hover:bg-white/10"
+              href={`/documents?vesselId=${encodeURIComponent(vesselId ?? '')}`}
+            >
+              Documents
+            </Link>
+            <div className="rounded-xl px-3 py-2 opacity-90">Overview</div>
           </nav>
 
           {auth.user ? (

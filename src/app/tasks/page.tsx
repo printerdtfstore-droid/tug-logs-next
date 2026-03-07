@@ -106,16 +106,18 @@ export default async function TasksPage({
               </div>
             ))}
             <Link
-              href={`/forms?vesselId=${encodeURIComponent(vesselId ?? '')}`}
+              href={`/forms?vesselId=${encodeURIComponent(vesselId ?? '')}&tab=library`}
               className="block rounded-xl px-3 py-2 opacity-90 hover:bg-white/10"
             >
               Forms
             </Link>
-            {['Documents', 'Overview'].map((item) => (
-              <div key={item} className="rounded-xl px-3 py-2 opacity-90">
-                {item}
-              </div>
-            ))}
+            <Link
+              href={`/documents?vesselId=${encodeURIComponent(vesselId ?? '')}`}
+              className="block rounded-xl px-3 py-2 opacity-90 hover:bg-white/10"
+            >
+              Documents
+            </Link>
+            <div className="rounded-xl px-3 py-2 opacity-90">Overview</div>
           </nav>
 
           {auth.user ? (
