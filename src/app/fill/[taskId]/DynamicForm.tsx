@@ -158,7 +158,11 @@ export default function DynamicForm({
                 <input
                   defaultValue={a?.value_text ?? ''}
                   type={f.field_type === 'number' ? 'number' : 'text'}
-                  placeholder={f.field_type === 'number' ? 'Enter a number' : ''}
+                  placeholder={
+                    f.field_type === 'number'
+                      ? 'Enter a number'
+                      : (f.sub_label_a ?? '')
+                  }
                   className="w-full rounded-xl border px-3 py-2"
                   onBlur={(e) =>
                     setSave(f.id, { value_text: e.currentTarget.value })
