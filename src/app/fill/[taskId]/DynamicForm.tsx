@@ -83,7 +83,7 @@ export default function DynamicForm({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="rounded-xl border bg-white">
       {errorMsg ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
           {errorMsg}
@@ -96,13 +96,14 @@ export default function DynamicForm({
         ))}
       </datalist>
 
-      {fields.map((f) => {
+      <div className="divide-y">
+        {fields.map((f) => {
         const a = byField.get(f.id);
         const label = f.qnum ? `${f.qnum} ${f.label}` : f.label;
 
         if (f.field_type === 'section') {
           return (
-            <div key={f.id} className="rounded-xl border bg-slate-50 px-3 py-2">
+            <div key={f.id} className="bg-slate-50 px-3 py-2">
               <div className="text-sm font-black text-slate-900">{label}</div>
             </div>
           );
@@ -110,14 +111,14 @@ export default function DynamicForm({
 
         if (f.field_type === 'info') {
           return (
-            <div key={f.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <div key={f.id} className="bg-slate-50 px-3 py-2">
               <div className="text-sm font-black text-slate-900">{label}</div>
             </div>
           );
         }
 
         return (
-          <div key={f.id} className="rounded-xl border p-3">
+          <div key={f.id} className="px-3 py-3">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-sm font-black">{label}</div>
@@ -137,6 +138,7 @@ export default function DynamicForm({
                 <input
                   defaultValue={a?.value_text ?? ''}
                   type={f.field_type === 'number' ? 'number' : 'text'}
+                  placeholder={f.field_type === 'number' ? 'Enter a number' : ''}
                   className="w-full rounded-xl border px-3 py-2"
                   onBlur={(e) =>
                     setSave(f.id, { value_text: e.currentTarget.value })
@@ -319,6 +321,7 @@ export default function DynamicForm({
           </div>
         );
       })}
+      </div>
 
       <button
         type="button"
