@@ -29,11 +29,13 @@ export default function DynamicForm({
   fields,
   existing,
   onSubmittedUrl,
+  referencePdfUrl,
 }: {
   submissionId: string;
   fields: Field[];
   existing: ExistingAnswer[];
   onSubmittedUrl: string;
+  referencePdfUrl?: string | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [savingFieldId, setSavingFieldId] = useState<string | null>(null);
@@ -110,9 +112,27 @@ export default function DynamicForm({
         }
 
         if (f.field_type === 'info') {
+          const showPaperclip =
+            Boolean(referencePdfUrl) &&
+            (label.toLowerCase().includes('paper clip') ||
+              label.toLowerCase().includes('paperclip'));
+
           return (
             <div key={f.id} className="bg-slate-50 px-3 py-2">
-              <div className="text-sm font-black text-slate-900">{label}</div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-sm font-black text-slate-900">{label}</div>
+                {showPaperclip ? (
+                  <a
+                    href={referencePdfUrl ?? '#'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg border bg-white px-2 py-1 text-sm font-black"
+                    title="Download reference"
+                  >
+                    📎
+                  </a>
+                ) : null}
+              </div>
             </div>
           );
         }

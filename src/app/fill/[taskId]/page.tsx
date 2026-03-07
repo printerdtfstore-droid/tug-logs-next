@@ -91,6 +91,23 @@ export default async function FillPage({
 
   const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim();
 
+  const { data: refDoc } = tpl?.code
+    ? await supabase
+        .from('documents')
+        .select('file_path')
+        .eq('template_code', tpl.code)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null as { file_path: string } | null };
+
+  const referencePdfUrl =
+    refDoc?.file_path && process.env.SUPABASE_URL
+      ? `${process.env.SUPABASE_URL}/storage/v1/object/public/documents/${encodeURIComponent(
+          refDoc.file_path
+        )}`
+      : null;
+
   return (
     <div className="min-h-dvh bg-slate-50 p-6">
       <div className="mx-auto max-w-3xl">
@@ -125,6 +142,7 @@ export default async function FillPage({
             fields={fields ?? []}
             existing={answers ?? []}
             onSubmittedUrl="/tasks?segment=history"
+            referencePdfUrl={referencePdfUrl}
           />
         </div>
       </div>
