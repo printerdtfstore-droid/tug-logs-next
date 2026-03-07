@@ -29,12 +29,17 @@ export default async function DocumentsPage({
     created_at: string;
   };
 
-  const admin = supabaseAdmin();
-  const { data: docs, error: docsErr } = await admin
+  const adminEnabled = Boolean(
+    process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const client = adminEnabled ? supabaseAdmin() : supabase;
+
+  const { data: docs, error: docsErr } = await client
     .from('documents')
     .select('id,title,template_code,file_path,created_at')
     .order('created_at', { ascending: false });
-  if (docsErr) throw docsErr;
+
+  const docsErrorMsg = docsErr ? docsErr.message : null;
 
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -103,6 +108,12 @@ export default async function DocumentsPage({
                 Upload PDFs to Supabase Storage bucket <b>documents</b> and add rows in
                 <code> public.documents</code>.
               </div>
+
+              {docsErrorMsg ? (
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                  Documents error: {docsErrorMsg}
+                </div>
+              ) : null}
 
               <div className="mt-4 space-y-3">
                 {((docs ?? []) as unknown as DocRow[]).map((d) => {
