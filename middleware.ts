@@ -17,7 +17,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnon, {
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnon, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -28,11 +29,14 @@ export async function middleware(request: NextRequest) {
           });
         },
       },
-    }
-  );
+    });
 
-  // Refresh session if expired.
-  await supabase.auth.getUser();
+    // Refresh session if expired.
+    await supabase.auth.getUser();
+  } catch {
+    // Never take down the whole site due to auth/session refresh issues.
+    return response;
+  }
 
   return response;
 }
