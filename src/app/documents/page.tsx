@@ -33,7 +33,7 @@ export default async function DocumentsPage({
     .select('id,title,template_code,file_path,created_at')
     .order('created_at', { ascending: false });
 
-  const base = process.env.SUPABASE_URL;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   return (
     <div className="min-h-dvh bg-slate-50">
