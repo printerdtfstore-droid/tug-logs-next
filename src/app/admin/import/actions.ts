@@ -25,6 +25,7 @@ function slugKey(input: string) {
 
 function parseTemplateText(input: {
   rawText: string;
+  defaultFieldType: 'text' | 'button_choice';
   choiceSet: ChoicePreset;
   customChoices: string;
 }) {
@@ -40,7 +41,7 @@ function parseTemplateText(input: {
             .map((s) => s.trim())
             .filter(Boolean);
 
-  if (choices.length < 2) {
+  if (input.defaultFieldType === 'button_choice' && choices.length < 2) {
     throw new Error('Importer: choices must have at least 2 items');
   }
 
@@ -95,9 +96,9 @@ function parseTemplateText(input: {
       fields.push({
         qnum,
         label,
-        field_type: 'button_choice',
+        field_type: input.defaultFieldType,
         required: true,
-        choices,
+        choices: input.defaultFieldType === 'button_choice' ? choices : [],
         field_key: `${slugKey(qnum)}_${slugKey(label)}`.slice(0, 60),
         order,
       });
@@ -137,7 +138,16 @@ export async function adminImportTemplate(formData: FormData): Promise<void> {
   if (!title) throw new Error('Missing title');
   if (!rawText) throw new Error('Missing raw text');
 
-  const parsed = parseTemplateText({ rawText, choiceSet, customChoices });
+  const defaultFieldType = String(
+    formData.get('defaultFieldType') || 'button_choice'
+  ).trim() as 'text' | 'button_choice';
+
+  const parsed = parseTemplateText({
+    rawText,
+    defaultFieldType,
+    choiceSet,
+    customChoices,
+  });
 
   const supabase = supabaseAdmin();
 

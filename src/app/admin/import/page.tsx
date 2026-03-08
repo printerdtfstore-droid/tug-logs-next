@@ -101,7 +101,18 @@ export default async function AdminImportPage({
               />
             </label>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+              <label className="block">
+                <div className="text-xs font-bold text-slate-600">Default field type</div>
+                <select
+                  name="defaultFieldType"
+                  defaultValue="button_choice"
+                  className="mt-1 w-full rounded-xl border px-3 py-2 text-sm"
+                >
+                  <option value="button_choice">Choice (radios)</option>
+                  <option value="text">Text</option>
+                </select>
+              </label>
               <label className="block">
                 <div className="text-xs font-bold text-slate-600">Choices preset</div>
                 <select
