@@ -164,10 +164,17 @@ export default async function AdminToolsPage() {
           </form>
         </div>
 
-        <div className="text-sm">
-          <Link className="underline" href="/tasks">
-            Back to dashboard
-          </Link>
+        <div className="text-sm space-y-2">
+          <div>
+            <Link className="underline" href="/admin/import">
+              Admin: Import a template
+            </Link>
+          </div>
+          <div>
+            <Link className="underline" href="/tasks">
+              Back to dashboard
+            </Link>
+          </div>
         </div>
       </div>
     </div>
