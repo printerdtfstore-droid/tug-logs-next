@@ -136,13 +136,20 @@ export default async function AdminImportPage({
             </div>
 
             <label className="block">
-              <div className="text-xs font-bold text-slate-600">Extracted PDF text</div>
+              <div className="text-xs font-bold text-slate-600">PDF upload (optional)</div>
+              <input name="pdf" type="file" accept="application/pdf" className="mt-1 w-full text-sm" />
+              <div className="mt-1 text-xs text-slate-500">
+                If you upload a PDF, we’ll extract the text automatically.
+              </div>
+            </label>
+
+            <label className="block">
+              <div className="text-xs font-bold text-slate-600">Extracted PDF text (optional)</div>
               <textarea
                 name="rawText"
-                required
                 rows={14}
                 className="mt-1 w-full rounded-xl border px-3 py-2 text-sm font-mono"
-                placeholder="Paste text with lines like: 1 HULL CHECKS, 1.1 Question..."
+                placeholder="Leave blank if you uploaded a PDF, or paste extracted text with lines like: 1 HULL CHECKS, 1.1 Question..."
               />
             </label>
 
