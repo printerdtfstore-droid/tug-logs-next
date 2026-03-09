@@ -123,7 +123,7 @@ export default async function AdminImportPage({
               <div className="text-xs font-bold text-slate-600">PDF upload (optional)</div>
               <input name="pdf" type="file" accept="application/pdf" className="mt-1 w-full text-sm" />
               <div className="mt-1 text-xs text-slate-500">
-                If you upload a PDF, we’ll extract the text automatically.
+                PDF auto-extraction is temporarily disabled — for now, paste the extracted text below.
               </div>
             </label>
 

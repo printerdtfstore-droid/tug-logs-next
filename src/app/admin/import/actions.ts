@@ -122,13 +122,6 @@ async function requireAuth() {
   return auth.user;
 }
 
-async function extractPdfText(file: File): Promise<string> {
-  const buf = Buffer.from(await file.arrayBuffer());
-  // pdf-parse is CJS-ish; dynamic import keeps Next/Vercel bundling happier.
-  const mod = (await import('pdf-parse')) as unknown as { default: (b: Buffer) => Promise<{ text?: string }> };
-  const parsed = await mod.default(buf);
-  return String(parsed.text || '').trim();
-}
 
 export async function adminImportTemplate(formData: FormData): Promise<void> {
   await requireAuth();
@@ -137,18 +130,16 @@ export async function adminImportTemplate(formData: FormData): Promise<void> {
   const title = String(formData.get('title') || '').trim();
   const category = String(formData.get('category') || '').trim() || 'Inspection';
   const rawTextInput = String(formData.get('rawText') || '').trim();
-  const pdf = formData.get('pdf') as File | null;
   const choiceSet = String(formData.get('choiceSet') || 'fail_pass') as ChoicePreset;
   const customChoices = String(formData.get('customChoices') || '').trim();
 
   if (!code) throw new Error('Missing template code');
   if (!title) throw new Error('Missing title');
 
-  let rawText = rawTextInput;
-  if (!rawText && pdf && typeof pdf.arrayBuffer === 'function' && pdf.size > 0) {
-    rawText = await extractPdfText(pdf);
-  }
-  if (!rawText) throw new Error('Missing raw text (paste text or upload a PDF)');
+  const rawText = rawTextInput;
+  // NOTE: PDF auto-extraction is temporarily disabled (Vercel runtime incompatibility).
+  // Upload is kept for future enhancement; for now paste extracted text.
+  if (!rawText) throw new Error('Missing raw text (paste extracted text)');
 
   const defaultFieldType = String(
     formData.get('defaultFieldType') || 'button_choice'
