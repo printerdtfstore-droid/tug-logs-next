@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase/server';
-import { isAdminEmail } from '@/lib/admin';
 import { adminImportTemplate } from './actions';
 
 export default async function AdminImportPage({
@@ -29,21 +28,6 @@ export default async function AdminImportPage({
     );
   }
 
-  if (!isAdminEmail(auth.user.email)) {
-    return (
-      <div className="min-h-dvh bg-slate-50 p-6">
-        <div className="mx-auto max-w-2xl rounded-2xl border bg-white p-6">
-          <h1 className="text-xl font-black">Admin Import</h1>
-          <p className="mt-2 text-sm text-slate-600">Not authorized.</p>
-          <div className="mt-4">
-            <Link className="underline" href="/tasks">
-              Back
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-dvh bg-slate-50 p-6">

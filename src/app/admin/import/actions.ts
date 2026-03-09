@@ -1,7 +1,6 @@
 'use server';
 
 import { supabaseServer } from '@/lib/supabase/server';
-import { isAdminEmail } from '@/lib/admin';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 
@@ -116,11 +115,10 @@ function parseTemplateText(input: {
   return { choices, fields };
 }
 
-async function requireAdmin() {
+async function requireAuth() {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error('Not authenticated');
-  if (!isAdminEmail(auth.user.email)) throw new Error('Not authorized');
   return auth.user;
 }
 
@@ -133,7 +131,7 @@ async function extractPdfText(file: File): Promise<string> {
 }
 
 export async function adminImportTemplate(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireAuth();
 
   const code = String(formData.get('code') || '').trim();
   const title = String(formData.get('title') || '').trim();
