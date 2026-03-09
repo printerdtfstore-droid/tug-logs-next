@@ -122,6 +122,28 @@ export async function updateRecordedDate(input: {
   return { ok: true };
 }
 
+export async function updateFilledByName(input: {
+  submissionId: string;
+  filledByName: string;
+}) {
+  const supabase = await supabaseServer();
+
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  if (!auth.user) throw new Error('Not authenticated');
+
+  const name = input.filledByName.trim();
+
+  const { error } = await supabase
+    .from('form_submissions')
+    .update({ filled_by_name: name || null })
+    .eq('id', input.submissionId)
+    .eq('status', 'Draft');
+  if (error) throw error;
+
+  return { ok: true };
+}
+
 export async function submitForm(input: { submissionId: string }) {
   const supabase = await supabaseServer();
 
@@ -131,7 +153,7 @@ export async function submitForm(input: { submissionId: string }) {
 
   const { data: submission, error: subErr } = await supabase
     .from('form_submissions')
-    .select('id, task_id, template_id')
+    .select('id, task_id, template_id, filled_by_name')
     .eq('id', input.submissionId)
     .single();
   if (subErr) throw subErr;
@@ -182,6 +204,7 @@ export async function submitForm(input: { submissionId: string }) {
       <p><b>Vessel:</b> ${vesselName || updatedTask.vessel_id}</p>
       <p><b>Template:</b> ${tplTitle || updatedTask.template_id}</p>
       <p><b>Recorded date:</b> ${updatedTask.recorded_date}</p>
+      <p><b>Name:</b> ${(submission as unknown as { filled_by_name?: string | null }).filled_by_name ?? ''}</p>
       <p><b>Submitted by:</b> ${auth.user.email ?? auth.user.id}</p>
       <p><b>Submitted at:</b> ${now}</p>
     `,

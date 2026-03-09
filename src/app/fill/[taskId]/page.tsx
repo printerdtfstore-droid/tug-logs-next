@@ -46,12 +46,15 @@ export default async function FillPage({
   // Get or create draft submission.
   const { data: existingDraft } = await supabase
     .from('form_submissions')
-    .select('id')
+    .select('id, filled_by_name')
     .eq('task_id', taskId)
     .eq('status', 'Draft')
     .maybeSingle();
 
   let submissionId: string | undefined = existingDraft?.id as string | undefined;
+  let filledByName: string = (existingDraft as unknown as { filled_by_name?: string | null })
+    ?.filled_by_name ??
+    '';
 
   if (!submissionId) {
     const { data: created, error: createErr } = await supabase
@@ -62,11 +65,13 @@ export default async function FillPage({
         vessel_id: task.vessel_id,
         status: 'Draft',
         created_by: auth.user.id,
+        filled_by_name: null,
       })
       .select('id')
       .single();
     if (createErr) throw createErr;
     submissionId = created.id;
+    filledByName = '';
   }
 
   if (!submissionId) throw new Error('Failed to create draft submission');
@@ -140,6 +145,8 @@ export default async function FillPage({
           <RecordedDatePicker
             taskId={task.id}
             recordedDate={task.recorded_date}
+            submissionId={sid}
+            filledByName={filledByName}
             disabled={false}
           />
         </div>
