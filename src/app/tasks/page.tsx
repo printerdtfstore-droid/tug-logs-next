@@ -117,6 +117,16 @@ export default async function TasksPage({
             >
               Documents
             </Link>
+
+            {auth.user ? (
+              <Link
+                href="/admin/import"
+                className="block rounded-xl px-3 py-2 opacity-90 hover:bg-white/10"
+              >
+                Form Import
+              </Link>
+            ) : null}
+
             <div className="rounded-xl px-3 py-2 opacity-90">Overview</div>
           </nav>
 
