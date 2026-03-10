@@ -4,7 +4,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 
-type ChoicePreset = 'fail_pass' | 'no_yes_na' | 'custom';
+type ChoicePreset = 'fail_pass' | 'no_yes_na' | 'true_false' | 'custom';
 
 function normalizeLines(raw: string) {
   return raw
@@ -35,10 +35,12 @@ function parseTemplateText(input: {
       ? ['Fail', 'Pass']
       : input.choiceSet === 'no_yes_na'
         ? ['No', 'Yes', 'N/A']
-        : input.customChoices
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean);
+        : input.choiceSet === 'true_false'
+          ? ['True', 'False']
+          : input.customChoices
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean);
 
   if (input.defaultFieldType === 'button_choice' && choices.length < 2) {
     throw new Error('Importer: choices must have at least 2 items');
@@ -86,7 +88,7 @@ function parseTemplateText(input: {
       const qnum = q[1];
       // Strip trailing choice tokens and REQUIRED if the PDF dump included them
       const label = q[2]
-        .replace(/\b(Fail\s+Pass|No\s+Yes\s+N\/?A)\b.*$/i, '')
+        .replace(/\b(Fail\s+Pass|No\s+Yes\s+N\/?A|True\s+False)\b.*$/i, '')
         .replace(/\bREQUIRED\b.*$/i, '')
         .trim();
 

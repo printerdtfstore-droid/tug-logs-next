@@ -106,6 +106,7 @@ export default async function AdminImportPage({
                 >
                   <option value="fail_pass">Fail / Pass</option>
                   <option value="no_yes_na">No / Yes / N/A</option>
+                  <option value="true_false">True / False</option>
                   <option value="custom">Custom (comma-separated)</option>
                 </select>
               </label>
