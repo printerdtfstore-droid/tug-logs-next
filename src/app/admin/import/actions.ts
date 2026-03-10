@@ -86,9 +86,14 @@ function parseTemplateText(input: {
     const q = qRe.exec(line);
     if (q) {
       const qnum = q[1];
+
+      const raw = q[2];
+      const looksTrueFalse = /\btrue\s*false\b/i.test(raw);
+      const looksDone = /\bdone\b/i.test(raw) && !looksTrueFalse;
+
       // Strip trailing choice tokens and REQUIRED if the PDF dump included them
-      let label = q[2]
-        .replace(/\b(Fail\s+Pass|No\s+Yes\s+N\/?A|True\s+False)\b.*$/i, '')
+      let label = raw
+        .replace(/\b(Fail\s+Pass|No\s+Yes\s+N\/?A|True\s+False|Done)\b.*$/i, '')
         .replace(/\bREQUIRED\b.*$/i, '')
         .trim();
 
@@ -102,14 +107,24 @@ function parseTemplateText(input: {
         else label = label.replace(/\bsignature\b/gi, 'Name').trim();
       }
 
-      const fieldType = isSignature ? 'text' : input.defaultFieldType;
+      let fieldType: 'text' | 'button_choice' = isSignature ? 'text' : input.defaultFieldType;
+      let fieldChoices: string[] = fieldType === 'button_choice' ? choices : [];
+
+      // Per-question overrides if the raw PDF text includes explicit choice cues.
+      if (!isSignature && looksTrueFalse) {
+        fieldType = 'button_choice';
+        fieldChoices = ['True', 'False'];
+      } else if (!isSignature && looksDone) {
+        fieldType = 'button_choice';
+        fieldChoices = ['Done', 'Not Done'];
+      }
 
       fields.push({
         qnum,
         label,
         field_type: fieldType,
         required: true,
-        choices: fieldType === 'button_choice' ? choices : [],
+        choices: fieldType === 'button_choice' ? fieldChoices : [],
         field_key: `${slugKey(qnum)}_${slugKey(label)}`.slice(0, 60),
         order,
       });
