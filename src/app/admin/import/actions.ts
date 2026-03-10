@@ -89,7 +89,8 @@ function parseTemplateText(input: {
 
       const raw = q[2];
       const looksTrueFalse = /\btrue\s*false\b/i.test(raw);
-      const looksDone = /\bdone\b/i.test(raw) && !looksTrueFalse;
+      const looksFailPass = /\bfail\s*pass\b/i.test(raw);
+      const looksDone = /\bdone\b/i.test(raw) && !looksTrueFalse && !looksFailPass;
 
       // Strip trailing choice tokens and REQUIRED if the PDF dump included them
       let label = raw
@@ -114,6 +115,9 @@ function parseTemplateText(input: {
       if (!isSignature && looksTrueFalse) {
         fieldType = 'button_choice';
         fieldChoices = ['True', 'False'];
+      } else if (!isSignature && looksFailPass) {
+        fieldType = 'button_choice';
+        fieldChoices = ['Fail', 'Pass'];
       } else if (!isSignature && looksDone) {
         fieldType = 'button_choice';
         fieldChoices = ['Done', 'Not Done'];
