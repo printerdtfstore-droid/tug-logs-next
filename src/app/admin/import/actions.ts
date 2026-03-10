@@ -87,19 +87,29 @@ function parseTemplateText(input: {
     if (q) {
       const qnum = q[1];
       // Strip trailing choice tokens and REQUIRED if the PDF dump included them
-      const label = q[2]
+      let label = q[2]
         .replace(/\b(Fail\s+Pass|No\s+Yes\s+N\/?A|True\s+False)\b.*$/i, '')
         .replace(/\bREQUIRED\b.*$/i, '')
         .trim();
 
       if (!label) continue;
 
+      // Heuristic overrides:
+      // - Any kind of signature should be a text/name field (not a choice).
+      const isSignature = /\bsignature\b/i.test(label);
+      if (isSignature) {
+        if (/captain/i.test(label)) label = 'Captain Name';
+        else label = label.replace(/\bsignature\b/gi, 'Name').trim();
+      }
+
+      const fieldType = isSignature ? 'text' : input.defaultFieldType;
+
       fields.push({
         qnum,
         label,
-        field_type: input.defaultFieldType,
+        field_type: fieldType,
         required: true,
-        choices: input.defaultFieldType === 'button_choice' ? choices : [],
+        choices: fieldType === 'button_choice' ? choices : [],
         field_key: `${slugKey(qnum)}_${slugKey(label)}`.slice(0, 60),
         order,
       });
