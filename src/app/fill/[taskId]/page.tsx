@@ -8,10 +8,10 @@ export default async function FillPage({
   searchParams,
 }: {
   params: Promise<{ taskId: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Record<string, string | string[] | undefined>;
 }) {
   const { taskId } = await params;
-  const sp = searchParams ? await searchParams : {};
+  const sp = searchParams ?? {};
   const returnToRaw = typeof sp.returnTo === 'string' ? sp.returnTo : undefined;
   const returnTo = returnToRaw && returnToRaw.startsWith('/') ? returnToRaw : null;
   const supabase = await supabaseServer();
