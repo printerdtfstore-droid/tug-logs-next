@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import { saveAnswer, submitForm } from './actions';
 
 export type Field = {
@@ -40,6 +40,7 @@ export default function DynamicForm({
   const [pending, startTransition] = useTransition();
   const [savingFieldId, setSavingFieldId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const byField = useMemo(() => {
     const map = new Map<string, ExistingAnswer>();
@@ -82,6 +83,18 @@ export default function DynamicForm({
         setSavingFieldId(null);
       }
     });
+  }
+
+  function scheduleSave(
+    fieldId: string,
+    payload: Record<string, string | null | undefined>,
+    delayMs = 400
+  ) {
+    const existing = saveTimers.current[fieldId];
+    if (existing) clearTimeout(existing);
+    saveTimers.current[fieldId] = setTimeout(() => {
+      setSave(fieldId, payload);
+    }, delayMs);
   }
 
   return (
@@ -164,6 +177,9 @@ export default function DynamicForm({
                       : (f.sub_label_a ?? '')
                   }
                   className="w-full rounded-xl border px-3 py-2"
+                  onChange={(e) =>
+                    scheduleSave(f.id, { value_text: e.currentTarget.value })
+                  }
                   onBlur={(e) =>
                     setSave(f.id, { value_text: e.currentTarget.value })
                   }
@@ -180,6 +196,9 @@ export default function DynamicForm({
                     inputMode="numeric"
                     placeholder="HH:MM"
                     className="min-w-[180px] flex-1 rounded-xl border px-3 py-2"
+                    onChange={(e) =>
+                      scheduleSave(f.id, { value_time_text: e.currentTarget.value })
+                    }
                     onBlur={(e) =>
                       setSave(f.id, { value_time_text: e.currentTarget.value })
                     }
@@ -220,6 +239,17 @@ export default function DynamicForm({
                         inputMode="numeric"
                         placeholder="HH:MM"
                         className="min-w-[140px] flex-1 rounded-xl border px-3 py-2"
+                        onChange={(e) =>
+                          scheduleSave(f.id, {
+                            value_time_text_a: e.currentTarget.value,
+                            value_time_text_b:
+                              (document.getElementById(
+                                `${f.id}-b`
+                              ) as HTMLInputElement | null)?.value ??
+                              a?.value_time_text_b ??
+                              '',
+                          })
+                        }
                         onBlur={(e) =>
                           setSave(f.id, {
                             value_time_text_a: e.currentTarget.value,
@@ -273,6 +303,17 @@ export default function DynamicForm({
                         inputMode="numeric"
                         placeholder="HH:MM"
                         className="min-w-[140px] flex-1 rounded-xl border px-3 py-2"
+                        onChange={(e) =>
+                          scheduleSave(f.id, {
+                            value_time_text_b: e.currentTarget.value,
+                            value_time_text_a:
+                              (document.getElementById(
+                                `${f.id}-a`
+                              ) as HTMLInputElement | null)?.value ??
+                              a?.value_time_text_a ??
+                              '',
+                          })
+                        }
                         onBlur={(e) =>
                           setSave(f.id, {
                             value_time_text_b: e.currentTarget.value,
