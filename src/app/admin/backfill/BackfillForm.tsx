@@ -6,16 +6,15 @@ import { runBackfill, ensureStartDateTask, generatePrefilledDrafts } from './act
 export default function BackfillForm({
   vessels,
   templates,
+  initialSourceTaskId,
 }: {
   vessels: { id: string; name: string }[];
   templates: { id: string; code: string; title: string }[];
+  initialSourceTaskId: string | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const [sourceTaskId, setSourceTaskId] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return new URLSearchParams(window.location.search).get('sourceTaskId');
-  });
+  const [sourceTaskId, setSourceTaskId] = useState<string | null>(initialSourceTaskId);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 

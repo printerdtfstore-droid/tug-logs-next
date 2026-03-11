@@ -3,7 +3,11 @@ import { supabaseServer } from '@/lib/supabase/server';
 
 import BackfillForm from './BackfillForm';
 
-export default async function AdminBackfillPage() {
+export default async function AdminBackfillPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ sourceTaskId?: string }>;
+}) {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {
@@ -35,6 +39,8 @@ export default async function AdminBackfillPage() {
     .eq('active', true)
     .order('code');
 
+  const sp = searchParams ? await searchParams : {};
+
   return (
     <div className="min-h-dvh bg-slate-50 p-6">
       <div className="mx-auto max-w-2xl rounded-2xl border bg-white p-6">
@@ -51,7 +57,11 @@ export default async function AdminBackfillPage() {
           </Link>
         </div>
 
-        <BackfillForm vessels={vessels ?? []} templates={templates ?? []} />
+        <BackfillForm
+          vessels={vessels ?? []}
+          templates={templates ?? []}
+          initialSourceTaskId={sp.sourceTaskId ?? null}
+        />
       </div>
     </div>
   );
