@@ -4,6 +4,153 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendActivityEmail } from '@/lib/email';
 
+export async function ensureStartDateTask(input: {
+  vessel_id: string;
+  template_id: string;
+  start_date: string;
+}) {
+  const supabase = await supabaseServer();
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  if (!auth.user) throw new Error('Not authenticated');
+
+  // Ensure the start-date task exists (creates if missing)
+  await runBackfill({
+    vessel_id: input.vessel_id,
+    template_id: input.template_id,
+    start_date: input.start_date,
+    end_date: input.start_date,
+  });
+
+  const admin = supabaseAdmin();
+  const { data: task, error: tErr } = await admin
+    .from('tasks')
+    .select('id')
+    .eq('vessel_id', input.vessel_id)
+    .eq('template_id', input.template_id)
+    .eq('recorded_date', input.start_date)
+    .eq('due_slot', '2359')
+    .single();
+  if (tErr) throw new Error(tErr.message);
+
+  return { ok: true, taskId: task.id as string };
+}
+
+export async function generatePrefilledDrafts(input: {
+  vessel_id: string;
+  template_id: string;
+  start_date: string;
+  end_date: string;
+  source_task_id: string;
+}) {
+  const supabase = await supabaseServer();
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  if (!auth.user) throw new Error('Not authenticated');
+
+  const admin = supabaseAdmin();
+
+  // Find source submission (prefer Submitted, else Draft)
+  const { data: sourceSub, error: sErr } = await admin
+    .from('form_submissions')
+    .select('id,filled_by_name')
+    .eq('task_id', input.source_task_id)
+    .in('status', ['Submitted', 'Draft'])
+    .order('status', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (sErr) throw new Error(sErr.message);
+  if (!sourceSub?.id) throw new Error('Source submission not found for source task');
+
+  const { data: sourceAnswers, error: aErr } = await admin
+    .from('form_answers')
+    .select(
+      'field_id,value_text,value_option_text,value_time_text,value_time_text_a,value_time_text_b,is_filled'
+    )
+    .eq('submission_id', sourceSub.id);
+  if (aErr) throw new Error(aErr.message);
+
+  // Ensure tasks exist for the full range
+  const backfillRes = await runBackfill({
+    vessel_id: input.vessel_id,
+    template_id: input.template_id,
+    start_date: input.start_date,
+    end_date: input.end_date,
+  });
+
+  // Fetch the tasks we just ensured
+  const { data: tasks, error: tErr } = await admin
+    .from('tasks')
+    .select('id,recorded_date')
+    .eq('vessel_id', input.vessel_id)
+    .eq('template_id', input.template_id)
+    .gte('recorded_date', input.start_date)
+    .lte('recorded_date', input.end_date)
+    .eq('due_slot', '2359')
+    .order('recorded_date', { ascending: true });
+  if (tErr) throw new Error(tErr.message);
+
+  let draftsPrefilled = 0;
+
+  for (const task of tasks ?? []) {
+    // Get or create draft submission for this task
+    const { data: existingDraft, error: dErr } = await admin
+      .from('form_submissions')
+      .select('id')
+      .eq('task_id', task.id)
+      .eq('status', 'Draft')
+      .maybeSingle();
+    if (dErr) throw new Error(dErr.message);
+
+    let submissionId = existingDraft?.id as string | undefined;
+
+    if (!submissionId) {
+      const { data: created, error: cErr } = await admin
+        .from('form_submissions')
+        .insert({
+          task_id: task.id,
+          template_id: input.template_id,
+          vessel_id: input.vessel_id,
+          status: 'Draft',
+          created_by: auth.user.id,
+          filled_by_name: sourceSub.filled_by_name ?? null,
+        })
+        .select('id')
+        .single();
+      if (cErr) throw new Error(cErr.message);
+      submissionId = created.id as string;
+    }
+
+    // Copy answers
+    const rows = (sourceAnswers ?? []).map((ans) => ({
+      submission_id: submissionId!,
+      field_id: ans.field_id,
+      value_text: ans.value_text,
+      value_option_text: ans.value_option_text,
+      value_time_text: ans.value_time_text,
+      value_time_text_a: ans.value_time_text_a,
+      value_time_text_b: ans.value_time_text_b,
+      is_filled: ans.is_filled,
+    }));
+
+    if (rows.length > 0) {
+      const { error: upErr } = await admin.from('form_answers').upsert(rows, {
+        onConflict: 'submission_id,field_id',
+      });
+      if (upErr) throw new Error(upErr.message);
+    }
+
+    draftsPrefilled += 1;
+  }
+
+  return {
+    ok: true,
+    tasksEnsured: (tasks ?? []).length,
+    draftsPrefilled,
+    backfill: backfillRes,
+  };
+}
+
 export async function runBackfill(input: {
   vessel_id: string;
   template_id: string;
