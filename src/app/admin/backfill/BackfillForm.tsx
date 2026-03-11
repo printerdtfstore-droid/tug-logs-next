@@ -1,7 +1,12 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { runBackfill, ensureStartDateTask, generatePrefilledDrafts } from './actions';
+import {
+  runBackfill,
+  ensureStartDateTask,
+  generatePrefilledDrafts,
+  type BackfillCadence,
+} from './actions';
 
 export default function BackfillForm({
   vessels,
@@ -28,11 +33,14 @@ export default function BackfillForm({
         const template_id = String(fd.get('template_id'));
         const start_date = String(fd.get('start_date'));
         const end_date = String(fd.get('end_date'));
+        const cadenceRaw = String(fd.get('cadence') ?? 'daily');
+        const cadence: BackfillCadence =
+          cadenceRaw === 'weekly' || cadenceRaw === 'monthly' ? cadenceRaw : 'daily';
 
         setMsg(null);
         startTransition(async () => {
           try {
-            const res = await runBackfill({ vessel_id, template_id, start_date, end_date });
+            const res = await runBackfill({ vessel_id, template_id, start_date, end_date, cadence });
             setMsg(`Created ${res.created} tasks.`);
           } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Backfill failed';
@@ -83,6 +91,24 @@ export default function BackfillForm({
             className="mt-1 w-full rounded-xl border px-3 py-2"
           />
         </label>
+      </div>
+
+      <div className="rounded-xl border bg-slate-50 p-3 text-sm font-bold">
+        <div className="text-sm font-black">Cadence</div>
+        <div className="mt-2 flex flex-wrap gap-4 text-sm">
+          <label className="flex items-center gap-2">
+            <input type="radio" name="cadence" value="daily" defaultChecked /> Daily
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="cadence" value="weekly" /> Weekly
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="cadence" value="monthly" /> Monthly
+          </label>
+        </div>
+        <div className="mt-2 text-xs font-semibold text-slate-600">
+          Weekly = same weekday as Start date. Monthly = same day-of-month as Start date (clamped to month end).
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -137,6 +163,9 @@ export default function BackfillForm({
             const template_id = String(fd.get('template_id'));
             const start_date = String(fd.get('start_date'));
             const end_date = String(fd.get('end_date'));
+            const cadenceRaw = String(fd.get('cadence') ?? 'daily');
+            const cadence: BackfillCadence =
+              cadenceRaw === 'weekly' || cadenceRaw === 'monthly' ? cadenceRaw : 'daily';
             const auto_submit = Boolean(fd.get('auto_submit'));
 
             setMsg(null);
@@ -148,6 +177,7 @@ export default function BackfillForm({
                   start_date,
                   end_date,
                   source_task_id: sourceTaskId!,
+                  cadence,
                   auto_submit,
                 });
                 setMsg(

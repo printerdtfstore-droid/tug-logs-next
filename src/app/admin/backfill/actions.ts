@@ -42,6 +42,7 @@ export async function generatePrefilledDrafts(input: {
   start_date: string;
   end_date: string;
   source_task_id: string;
+  cadence?: BackfillCadence;
   auto_submit?: boolean;
 }) {
   const supabase = await supabaseServer();
@@ -77,16 +78,28 @@ export async function generatePrefilledDrafts(input: {
     template_id: input.template_id,
     start_date: input.start_date,
     end_date: input.end_date,
+    cadence: input.cadence ?? 'daily',
   });
 
-  // Fetch the tasks we just ensured
+  const cadence: BackfillCadence = input.cadence ?? 'daily';
+  const targetDates = computeCadenceDates(input.start_date, input.end_date, cadence);
+  if (targetDates.length === 0) {
+    return {
+      ok: true,
+      tasksEnsured: 0,
+      draftsPrefilled: 0,
+      tasksAutoSubmitted: 0,
+      backfill: backfillRes,
+    };
+  }
+
+  // Fetch the tasks we just ensured (only on the cadence dates)
   const { data: tasks, error: tErr } = await admin
     .from('tasks')
     .select('id,recorded_date,required_count')
     .eq('vessel_id', input.vessel_id)
     .eq('template_id', input.template_id)
-    .gte('recorded_date', input.start_date)
-    .lte('recorded_date', input.end_date)
+    .in('recorded_date', targetDates)
     .eq('due_slot', '2359')
     .order('recorded_date', { ascending: true });
   if (tErr) throw new Error(tErr.message);
@@ -172,11 +185,14 @@ export async function generatePrefilledDrafts(input: {
   };
 }
 
+export type BackfillCadence = 'daily' | 'weekly' | 'monthly';
+
 export async function runBackfill(input: {
   vessel_id: string;
   template_id: string;
   start_date: string;
   end_date: string;
+  cadence?: BackfillCadence;
 }) {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
@@ -193,8 +209,8 @@ export async function runBackfill(input: {
     .eq('required', true);
   if (rcErr) throw new Error(rcErr.message);
 
-  const start = new Date(`${input.start_date}T00:00:00Z`);
-  const end = new Date(`${input.end_date}T00:00:00Z`);
+  const cadence: BackfillCadence = input.cadence ?? 'daily';
+  const dates = computeCadenceDates(input.start_date, input.end_date, cadence);
 
   type TaskRow = {
     vessel_id: string;
@@ -211,8 +227,7 @@ export async function runBackfill(input: {
   };
 
   const rows: TaskRow[] = [];
-  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
-    const ymd = d.toISOString().slice(0, 10);
+  for (const ymd of dates) {
     rows.push({
       vessel_id: input.vessel_id,
       template_id: input.template_id,
@@ -251,3 +266,61 @@ export async function runBackfill(input: {
 
   return { created };
 }
+
+function daysInUtcMonth(year: number, monthIndex0: number) {
+  // monthIndex0: 0-11
+  return new Date(Date.UTC(year, monthIndex0 + 1, 0)).getUTCDate();
+}
+
+function computeCadenceDates(startYmd: string, endYmd: string, cadence: BackfillCadence): string[] {
+  const start = new Date(`${startYmd}T00:00:00Z`);
+  const end = new Date(`${endYmd}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return [];
+  if (start > end) return [];
+
+  const out: string[] = [];
+
+  if (cadence === 'daily') {
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      out.push(d.toISOString().slice(0, 10));
+    }
+    return out;
+  }
+
+  if (cadence === 'weekly') {
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 7)) {
+      out.push(d.toISOString().slice(0, 10));
+    }
+    return out;
+  }
+
+  // monthly: same day-of-month as start, clamped to last day of month
+  const startDom = start.getUTCDate();
+  let y = start.getUTCFullYear();
+  let m = start.getUTCMonth();
+
+  while (true) {
+    const dim = daysInUtcMonth(y, m);
+    const dom = Math.min(startDom, dim);
+    const d = new Date(Date.UTC(y, m, dom));
+    if (d < start) {
+      // if clamping pushed us before the start (rare), bump one month
+    } else if (d > end) {
+      break;
+    } else {
+      out.push(d.toISOString().slice(0, 10));
+    }
+
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+
+    // Safety
+    if (out.length > 4000) break;
+  }
+
+  return out;
+}
+
