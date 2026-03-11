@@ -241,10 +241,12 @@ export default async function TasksPage({
                 />
               ) : (
                 <div className="space-y-3">
-                  {segment === 'this_week' ? (
+                  {segment === 'this_week' || segment === 'engine_log' ? (
                     <div className="rounded-2xl border bg-slate-50 p-4">
                       <div className="text-xs font-black tracking-widest text-slate-700">
-                        QUICK START (ON DEMAND)
+                        {segment === 'engine_log'
+                          ? 'ENGINE LOGS (TEMPLATES)'
+                          : 'QUICK START (ON DEMAND)'}
                       </div>
                       <div className="mt-3">
                         <OnDemandTemplates
@@ -259,58 +261,63 @@ export default async function TasksPage({
                       </div>
                     </div>
                   ) : null}
-                  {(tasks ?? []).map((task) => {
-                  const tpl = (task as unknown as { form_templates?: { code: string; title: string } }).form_templates;
-                  const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim() || 'Task';
-                  const meta = task.is_backfilled
-                    ? `Recorded: ${task.recorded_date}`
-                    : task.due_at
-                      ? `Due: ${new Date(task.due_at).toLocaleString()}`
-                      : `Recorded: ${task.recorded_date}`;
 
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border p-4"
-                    >
-                      <div>
-                        <div className="text-sm font-black text-slate-900">{title}</div>
-                        <div className="mt-1 text-xs text-slate-500">{meta}</div>
-                        <div className="mt-2 text-xs font-extrabold">
-                          Items Finished: {task.answered_count} / {task.required_count}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full border bg-slate-50 px-3 py-1 text-[11px] font-black">
-                          {task.status?.toUpperCase()}
-                        </span>
+                  {segment !== 'engine_log'
+                    ? (tasks ?? []).map((task) => {
+                        const tpl = (task as unknown as {
+                          form_templates?: { code: string; title: string };
+                        }).form_templates;
+                        const title = `${tpl?.code ?? ''} ${tpl?.title ?? ''}`.trim() || 'Task';
+                        const meta = task.is_backfilled
+                          ? `Recorded: ${task.recorded_date}`
+                          : task.due_at
+                            ? `Due: ${new Date(task.due_at).toLocaleString()}`
+                            : `Recorded: ${task.recorded_date}`;
 
-                        {task.status === 'Submitted' ? (
-                          <Link
-                            href={`/view/${encodeURIComponent(task.id)}`}
-                            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
+                        return (
+                          <div
+                            key={task.id}
+                            className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border p-4"
                           >
-                            View
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/fill/${encodeURIComponent(task.id)}`}
-                            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
-                          >
-                            Start
-                          </Link>
-                        )}
-                      </div>
+                            <div>
+                              <div className="text-sm font-black text-slate-900">{title}</div>
+                              <div className="mt-1 text-xs text-slate-500">{meta}</div>
+                              <div className="mt-2 text-xs font-extrabold">
+                                Items Finished: {task.answered_count} / {task.required_count}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full border bg-slate-50 px-3 py-1 text-[11px] font-black">
+                                {task.status?.toUpperCase()}
+                              </span>
+
+                              {task.status === 'Submitted' ? (
+                                <Link
+                                  href={`/view/${encodeURIComponent(task.id)}`}
+                                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
+                                >
+                                  View
+                                </Link>
+                              ) : (
+                                <Link
+                                  href={`/fill/${encodeURIComponent(task.id)}`}
+                                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white"
+                                >
+                                  Start
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    : null}
+
+                  {segment !== 'engine_log' && (!tasks || tasks.length === 0) ? (
+                    <div className="rounded-xl border bg-slate-50 p-4 text-sm text-slate-600">
+                      No tasks yet. Create a vessel + template, or run backfill.
                     </div>
-                  );
-                })}
-
-                {(!tasks || tasks.length === 0) && (
-                  <div className="rounded-xl border bg-slate-50 p-4 text-sm text-slate-600">
-                    No tasks yet. Create a vessel + template, or run backfill.
-                  </div>
-                )}
-              </div>
+                  ) : null}
+                </div>
               )}
 
               <div className="mt-4 text-sm">
