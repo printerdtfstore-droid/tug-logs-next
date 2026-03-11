@@ -36,6 +36,12 @@ export default function BackfillForm({
   const [sourceTaskId, setSourceTaskId] = useState<string | null>(initialSourceTaskId);
   const autoCloneRanRef = useRef(false);
 
+  const effectiveSourceTaskId =
+    sourceTaskId ??
+    (typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('sourceTaskId')
+      : null);
+
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const defaultStart = initialStartDate ?? today;
   const defaultEnd = initialEndDate ?? today;
@@ -45,7 +51,7 @@ export default function BackfillForm({
   useEffect(() => {
     // If we came back from the start-day Submit with auto_clone=1, run the clone automatically.
     if (!initialAutoClone) return;
-    if (!sourceTaskId) return;
+    if (!effectiveSourceTaskId) return;
     if (autoCloneRanRef.current) return;
 
     const form = document.querySelector('form');
@@ -71,7 +77,7 @@ export default function BackfillForm({
           template_id,
           start_date,
           end_date,
-          source_task_id: sourceTaskId,
+          source_task_id: effectiveSourceTaskId,
           cadence,
           auto_submit,
         });
@@ -88,7 +94,7 @@ export default function BackfillForm({
         setMsg(msg);
       }
     });
-  }, [initialAutoClone, sourceTaskId, startTransition]);
+  }, [initialAutoClone, effectiveSourceTaskId, startTransition]);
 
   return (
     <form
@@ -244,7 +250,7 @@ export default function BackfillForm({
         </button>
 
         <button
-          disabled={pending || !sourceTaskId}
+          disabled={pending || !effectiveSourceTaskId}
           className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-base font-black text-white disabled:opacity-60 sm:col-span-2"
           type="button"
           onClick={() => {
@@ -266,7 +272,7 @@ export default function BackfillForm({
                   template_id,
                   start_date,
                   end_date,
-                  source_task_id: sourceTaskId!,
+                  source_task_id: effectiveSourceTaskId!,
                   cadence,
                   auto_submit,
                 });
