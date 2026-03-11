@@ -1,7 +1,6 @@
 'use server';
 
 import { supabaseServer } from '@/lib/supabase/server';
-import { isAdminEmail } from '@/lib/admin';
 import { sendActivityEmail } from '@/lib/email';
 
 export async function runBackfill(input: {
@@ -14,9 +13,6 @@ export async function runBackfill(input: {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error('Not authenticated');
 
-  if (!isAdminEmail(auth.user.email)) {
-    throw new Error('Not authorized (admin only)');
-  }
 
   const { data, error } = await supabase.rpc('backfill_tasks', {
     p_vessel_id: input.vessel_id,
@@ -26,7 +22,7 @@ export async function runBackfill(input: {
     p_due_hour: 23,
     p_due_min: 59,
   });
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? 'Backfill RPC failed');
 
   const created = data as number;
 
