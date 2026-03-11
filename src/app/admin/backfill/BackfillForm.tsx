@@ -84,6 +84,10 @@ export default function BackfillForm({
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2">
+          <input name="auto_submit" type="checkbox" defaultChecked />
+          Auto-submit cloned days (shows in History)
+        </label>
         <button
           disabled={pending}
           className="w-full rounded-2xl border border-emerald-700 bg-white px-4 py-3 text-base font-black text-emerald-800 disabled:opacity-60"
@@ -131,6 +135,7 @@ export default function BackfillForm({
             const template_id = String(fd.get('template_id'));
             const start_date = String(fd.get('start_date'));
             const end_date = String(fd.get('end_date'));
+            const auto_submit = Boolean(fd.get('auto_submit'));
 
             setMsg(null);
             startTransition(async () => {
@@ -141,9 +146,13 @@ export default function BackfillForm({
                   start_date,
                   end_date,
                   source_task_id: sourceTaskId!,
+                  auto_submit,
                 });
                 setMsg(
-                  `Created/ensured ${res.tasksEnsured} tasks and prefilled ${res.draftsPrefilled} draft submissions.`
+                  `Created/ensured ${res.tasksEnsured} tasks and prefilled ${res.draftsPrefilled} submissions.` +
+                    (res.tasksAutoSubmitted
+                      ? ` Auto-submitted: ${res.tasksAutoSubmitted}.`
+                      : '')
                 );
               } catch (err: unknown) {
                 const msg = err instanceof Error ? err.message : 'Prefill failed';

@@ -42,6 +42,7 @@ export async function generatePrefilledDrafts(input: {
   start_date: string;
   end_date: string;
   source_task_id: string;
+  auto_submit?: boolean;
 }) {
   const supabase = await supabaseServer();
   const { data: auth, error: authErr } = await supabase.auth.getUser();
@@ -81,7 +82,7 @@ export async function generatePrefilledDrafts(input: {
   // Fetch the tasks we just ensured
   const { data: tasks, error: tErr } = await admin
     .from('tasks')
-    .select('id,recorded_date')
+    .select('id,recorded_date,required_count')
     .eq('vessel_id', input.vessel_id)
     .eq('template_id', input.template_id)
     .gte('recorded_date', input.start_date)
@@ -91,6 +92,7 @@ export async function generatePrefilledDrafts(input: {
   if (tErr) throw new Error(tErr.message);
 
   let draftsPrefilled = 0;
+  let tasksAutoSubmitted = 0;
 
   for (const task of tasks ?? []) {
     // Get or create draft submission for this task
@@ -141,12 +143,31 @@ export async function generatePrefilledDrafts(input: {
     }
 
     draftsPrefilled += 1;
+
+    if (input.auto_submit) {
+      // Mark submission + task as submitted so it appears in History.
+      const now = new Date().toISOString();
+      const { error: subErr } = await admin
+        .from('form_submissions')
+        .update({ status: 'Submitted', submitted_at: now })
+        .eq('id', submissionId!);
+      if (subErr) throw new Error(subErr.message);
+
+      const { error: taskErr } = await admin
+        .from('tasks')
+        .update({ status: 'Submitted', answered_count: task.required_count ?? 0 })
+        .eq('id', task.id);
+      if (taskErr) throw new Error(taskErr.message);
+
+      tasksAutoSubmitted += 1;
+    }
   }
 
   return {
     ok: true,
     tasksEnsured: (tasks ?? []).length,
     draftsPrefilled,
+    tasksAutoSubmitted,
     backfill: backfillRes,
   };
 }
