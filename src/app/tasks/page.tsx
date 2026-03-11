@@ -272,11 +272,7 @@ export default async function TasksPage({
                         <span className="rounded-full border bg-slate-50 px-3 py-1 text-[11px] font-black">
                           {task.status?.toUpperCase()}
                         </span>
-                        {task.is_backfilled ? (
-                          <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-black text-orange-800">
-                            BACKFILL
-                          </span>
-                        ) : null}
+
                         {task.status === 'Submitted' ? (
                           <Link
                             href={`/view/${encodeURIComponent(task.id)}`}
