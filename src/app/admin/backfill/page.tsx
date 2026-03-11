@@ -6,7 +6,7 @@ import BackfillForm from './BackfillForm';
 export default async function AdminBackfillPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ sourceTaskId?: string }>;
+  searchParams?: Record<string, string | string[] | undefined>;
 }) {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
@@ -39,7 +39,18 @@ export default async function AdminBackfillPage({
     .eq('active', true)
     .order('code');
 
-  const sp = searchParams ? await searchParams : {};
+  const sp = searchParams ?? {};
+  const sourceTaskId = typeof sp.sourceTaskId === 'string' ? sp.sourceTaskId : null;
+  const vessel_id = typeof sp.vessel_id === 'string' ? sp.vessel_id : null;
+  const template_id = typeof sp.template_id === 'string' ? sp.template_id : null;
+  const start_date = typeof sp.start_date === 'string' ? sp.start_date : null;
+  const end_date = typeof sp.end_date === 'string' ? sp.end_date : null;
+  const cadence =
+    sp.cadence === 'weekly' || sp.cadence === 'monthly' || sp.cadence === 'daily'
+      ? sp.cadence
+      : null;
+  const auto_submit = sp.auto_submit === '1' || sp.auto_submit === 'true' ? true : sp.auto_submit === '0' ? false : null;
+  const auto_clone = sp.auto_clone === '1' || sp.auto_clone === 'true' ? true : false;
 
   return (
     <div className="min-h-dvh bg-slate-50 p-6">
@@ -60,7 +71,14 @@ export default async function AdminBackfillPage({
         <BackfillForm
           vessels={vessels ?? []}
           templates={templates ?? []}
-          initialSourceTaskId={sp.sourceTaskId ?? null}
+          initialSourceTaskId={sourceTaskId}
+          initialVesselId={vessel_id}
+          initialTemplateId={template_id}
+          initialStartDate={start_date}
+          initialEndDate={end_date}
+          initialCadence={cadence}
+          initialAutoSubmit={auto_submit}
+          initialAutoClone={auto_clone}
         />
       </div>
     </div>
