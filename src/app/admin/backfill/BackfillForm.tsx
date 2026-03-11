@@ -12,7 +12,10 @@ export default function BackfillForm({
 }) {
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const [sourceTaskId, setSourceTaskId] = useState<string | null>(null);
+  const [sourceTaskId, setSourceTaskId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('sourceTaskId');
+  });
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -106,7 +109,7 @@ export default function BackfillForm({
                 const res = await ensureStartDateTask({ vessel_id, template_id, start_date });
                 setSourceTaskId(res.taskId);
                 setMsg(`Source task ready for ${start_date}. Opening fill page…`);
-                window.location.href = `/fill/${res.taskId}?returnTo=/admin/backfill`;
+                window.location.href = `/fill/${res.taskId}?returnTo=${encodeURIComponent(`/admin/backfill?sourceTaskId=${res.taskId}`)}`;
               } catch (err: unknown) {
                 const msg = err instanceof Error ? err.message : 'Failed to create source task';
                 setMsg(msg);
