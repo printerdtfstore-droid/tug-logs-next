@@ -4,7 +4,7 @@ import { signOut } from '../login/actions';
 import VesselSelect from '@/components/VesselSelect';
 import OnDemandTemplates from './OnDemandTemplates';
 
-type Segment = 'this_week' | 'beyond' | 'on_demand' | 'backfill' | 'history';
+type Segment = 'this_week' | 'engine_log' | 'beyond' | 'on_demand' | 'backfill' | 'history';
 
 function segmentLabel(seg: Segment) {
   switch (seg) {
@@ -45,7 +45,7 @@ export default async function TasksPage({
   let q = supabase
     .from('tasks')
     .select(
-      'id, status, due_type, recorded_date, due_at, is_backfilled, required_count, answered_count, template_id, vessel_id, form_templates(code,title)'
+      'id, status, due_type, recorded_date, due_at, is_backfilled, required_count, answered_count, template_id, vessel_id, form_templates!inner(code,title,category)'
     )
     .eq('vessel_id', vesselId ?? '')
     .order('recorded_date', { ascending: false })
@@ -57,8 +57,13 @@ export default async function TasksPage({
     q = q.eq('status', 'Open');
     if (segment === 'on_demand') q = q.eq('due_type', 'OnDemand');
     if (segment === 'backfill') q = q.eq('is_backfilled', true);
-    if (segment === 'this_week' || segment === 'beyond') {
+
+    if (segment === 'this_week' || segment === 'beyond' || segment === 'engine_log') {
       q = q.eq('due_type', 'Scheduled');
+    }
+
+    if (segment === 'engine_log') {
+      q = q.eq('form_templates.category', 'Engine Logs');
     }
   }
 
@@ -80,7 +85,14 @@ export default async function TasksPage({
         .eq('active', true)
         .in('code', ['FRM006702', 'FRM006703'])
         .order('code')
-    : { data: [] as { id: string; code: string; title: string; category: string | null; active: boolean }[] };
+    : segment === 'engine_log'
+      ? await supabase
+          .from('form_templates')
+          .select('id,code,title,category,active')
+          .eq('active', true)
+          .eq('category', 'Engine Logs')
+          .order('code')
+      : { data: [] as { id: string; code: string; title: string; category: string | null; active: boolean }[] };
 
   return (
     <div className="min-h-dvh bg-slate-50">
@@ -153,7 +165,7 @@ export default async function TasksPage({
                 {(
                   [
                     { label: 'Wheelhouse', segment: 'this_week' as Segment },
-                    { label: 'Engine Log' },
+                    { label: 'Engine Log', segment: 'engine_log' as Segment },
                     { label: 'Worklists' },
                     { label: 'Audit / Survey' },
                     { label: 'JSA' },
