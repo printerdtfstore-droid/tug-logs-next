@@ -5,10 +5,15 @@ import RecordedDatePicker from './RecordedDatePicker';
 
 export default async function FillPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ taskId: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { taskId } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const returnToRaw = typeof sp.returnTo === 'string' ? sp.returnTo : undefined;
+  const returnTo = returnToRaw && returnToRaw.startsWith('/') ? returnToRaw : null;
   const supabase = await supabaseServer();
 
   const { data: auth } = await supabase.auth.getUser();
@@ -156,7 +161,7 @@ export default async function FillPage({
             submissionId={sid}
             fields={fields ?? []}
             existing={answers ?? []}
-            onSubmittedUrl="/tasks?segment=history"
+            onSubmittedUrl={returnTo ?? '/tasks?segment=history'}
             referencePdfUrl={referencePdfUrl}
           />
         </div>

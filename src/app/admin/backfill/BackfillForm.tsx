@@ -102,7 +102,7 @@ export default function BackfillForm({
                 const res = await ensureStartDateTask({ vessel_id, template_id, start_date });
                 setSourceTaskId(res.taskId);
                 setMsg(`Source task ready for ${start_date}. Opening fill page…`);
-                window.location.href = `/fill/${res.taskId}`;
+                window.location.href = `/fill/${res.taskId}?returnTo=/admin/backfill`;
               } catch (err: unknown) {
                 const msg = err instanceof Error ? err.message : 'Failed to create source task';
                 setMsg(msg);
