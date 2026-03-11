@@ -356,7 +356,9 @@ export default function DynamicForm({
             setErrorMsg(null);
             try {
               await submitForm({ submissionId });
-              window.location.href = onSubmittedUrl;
+              const rt = new URL(window.location.href).searchParams.get('returnTo');
+              const dest = rt && rt.startsWith('/') ? rt : onSubmittedUrl;
+              window.location.href = dest;
             } catch (e: unknown) {
               setErrorMsg(e instanceof Error ? e.message : 'Submit failed');
             }
