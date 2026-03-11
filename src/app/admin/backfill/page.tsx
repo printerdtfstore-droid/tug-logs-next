@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 
 import BackfillForm from './BackfillForm';
+import { generatePrefilledDrafts, type BackfillCadence } from './actions';
 
 export default async function AdminBackfillPage({
   searchParams,
@@ -52,6 +54,51 @@ export default async function AdminBackfillPage({
   const auto_submit = sp.auto_submit === '1' || sp.auto_submit === 'true' ? true : sp.auto_submit === '0' ? false : null;
   const auto_clone = sp.auto_clone === '1' || sp.auto_clone === 'true' ? true : false;
 
+  const clone_ok = sp.clone_ok === '1' ? true : false;
+  const tasksEnsured = typeof sp.tasksEnsured === 'string' ? Number(sp.tasksEnsured) : null;
+  const draftsPrefilled = typeof sp.draftsPrefilled === 'string' ? Number(sp.draftsPrefilled) : null;
+  const tasksAutoSubmitted = typeof sp.tasksAutoSubmitted === 'string' ? Number(sp.tasksAutoSubmitted) : null;
+
+  // If auto_clone=1, run the clone on the server (reliable), then redirect to a clean URL.
+  if (
+    auto_clone &&
+    sourceTaskId &&
+    vessel_id &&
+    template_id &&
+    start_date &&
+    end_date &&
+    cadence
+  ) {
+    const res = await generatePrefilledDrafts({
+      vessel_id,
+      template_id,
+      start_date,
+      end_date,
+      source_task_id: sourceTaskId,
+      cadence: cadence as BackfillCadence,
+      auto_submit: auto_submit ?? false,
+    });
+
+    const clean = new URL('/admin/backfill', 'http://local');
+    clean.searchParams.set('sourceTaskId', sourceTaskId);
+    clean.searchParams.set('vessel_id', vessel_id);
+    clean.searchParams.set('template_id', template_id);
+    clean.searchParams.set('start_date', start_date);
+    clean.searchParams.set('end_date', end_date);
+    clean.searchParams.set('cadence', cadence);
+    clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
+    clean.searchParams.set('clone_ok', '1');
+    clean.searchParams.set('tasksEnsured', String(res.tasksEnsured));
+    clean.searchParams.set('draftsPrefilled', String(res.draftsPrefilled));
+    clean.searchParams.set('tasksAutoSubmitted', String(res.tasksAutoSubmitted));
+
+    redirect(clean.pathname + clean.search);
+  }
+
+  const initialMsg = clone_ok
+    ? `Cloned range. Ensured tasks: ${tasksEnsured ?? 0}. Prefilled: ${draftsPrefilled ?? 0}. Auto-submitted: ${tasksAutoSubmitted ?? 0}.`
+    : null;
+
   return (
     <div className="min-h-dvh bg-slate-50 p-6">
       <div className="mx-auto max-w-2xl rounded-2xl border bg-white p-6">
@@ -78,8 +125,11 @@ export default async function AdminBackfillPage({
           initialEndDate={end_date}
           initialCadence={cadence}
           initialAutoSubmit={auto_submit}
-          initialAutoClone={auto_clone}
+          initialAutoClone={false}
         />
+        {initialMsg ? (
+          <div className="mt-3 rounded-xl border bg-slate-50 p-3 text-sm">{initialMsg}</div>
+        ) : null}
       </div>
     </div>
   );
