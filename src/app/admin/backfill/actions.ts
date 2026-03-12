@@ -48,9 +48,10 @@ export async function ensureStartDateTask(input: {
     throw new Error('Failed to create primary task slot');
   }
 
-  // Hard cap: max 2 per day
+  // If secondary already exists, just return the primary slot (do not error).
+  // This avoids blocking backfill flows when a day already has 2 entries.
   if (bySlot.has(SLOT_SECONDARY)) {
-    throw new Error('Max 2 logs per day for the same form/date');
+    return { ok: true, taskId: bySlot.get(SLOT_PRIMARY)! };
   }
 
   if (!bySlot.has(SLOT_SECONDARY)) {
