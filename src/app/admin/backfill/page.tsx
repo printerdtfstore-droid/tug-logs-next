@@ -59,6 +59,8 @@ export default async function AdminBackfillPage({
   const draftsPrefilled = typeof sp.draftsPrefilled === 'string' ? Number(sp.draftsPrefilled) : null;
   const tasksAutoSubmitted = typeof sp.tasksAutoSubmitted === 'string' ? Number(sp.tasksAutoSubmitted) : null;
 
+  const clone_error = typeof sp.clone_error === 'string' ? sp.clone_error : null;
+
   // If auto_clone=1, run the clone on the server (reliable), then redirect to a clean URL.
   if (
     auto_clone &&
@@ -69,35 +71,52 @@ export default async function AdminBackfillPage({
     end_date &&
     cadence
   ) {
-    const res = await generatePrefilledDrafts({
-      vessel_id,
-      template_id,
-      start_date,
-      end_date,
-      source_task_id: sourceTaskId,
-      cadence: cadence as BackfillCadence,
-      auto_submit: auto_submit ?? false,
-    });
+    try {
+      const res = await generatePrefilledDrafts({
+        vessel_id,
+        template_id,
+        start_date,
+        end_date,
+        source_task_id: sourceTaskId,
+        cadence: cadence as BackfillCadence,
+        auto_submit: auto_submit ?? false,
+      });
 
-    const clean = new URL('/admin/backfill', 'http://local');
-    clean.searchParams.set('sourceTaskId', sourceTaskId);
-    clean.searchParams.set('vessel_id', vessel_id);
-    clean.searchParams.set('template_id', template_id);
-    clean.searchParams.set('start_date', start_date);
-    clean.searchParams.set('end_date', end_date);
-    clean.searchParams.set('cadence', cadence);
-    clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
-    clean.searchParams.set('clone_ok', '1');
-    clean.searchParams.set('tasksEnsured', String(res.tasksEnsured));
-    clean.searchParams.set('draftsPrefilled', String(res.draftsPrefilled));
-    clean.searchParams.set('tasksAutoSubmitted', String(res.tasksAutoSubmitted));
+      const clean = new URL('/admin/backfill', 'http://local');
+      clean.searchParams.set('sourceTaskId', sourceTaskId);
+      clean.searchParams.set('vessel_id', vessel_id);
+      clean.searchParams.set('template_id', template_id);
+      clean.searchParams.set('start_date', start_date);
+      clean.searchParams.set('end_date', end_date);
+      clean.searchParams.set('cadence', cadence);
+      clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
+      clean.searchParams.set('clone_ok', '1');
+      clean.searchParams.set('tasksEnsured', String(res.tasksEnsured));
+      clean.searchParams.set('draftsPrefilled', String(res.draftsPrefilled));
+      clean.searchParams.set('tasksAutoSubmitted', String(res.tasksAutoSubmitted));
 
-    redirect(clean.pathname + clean.search);
+      redirect(clean.pathname + clean.search);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Clone failed';
+      const clean = new URL('/admin/backfill', 'http://local');
+      clean.searchParams.set('sourceTaskId', sourceTaskId);
+      clean.searchParams.set('vessel_id', vessel_id);
+      clean.searchParams.set('template_id', template_id);
+      clean.searchParams.set('start_date', start_date);
+      clean.searchParams.set('end_date', end_date);
+      clean.searchParams.set('cadence', cadence);
+      clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
+      clean.searchParams.set('clone_ok', '0');
+      clean.searchParams.set('clone_error', msg);
+      redirect(clean.pathname + clean.search);
+    }
   }
 
   const initialMsg = clone_ok
     ? `Cloned range. Ensured tasks: ${tasksEnsured ?? 0}. Prefilled: ${draftsPrefilled ?? 0}. Auto-submitted: ${tasksAutoSubmitted ?? 0}.`
-    : null;
+    : clone_error
+      ? `Clone failed: ${clone_error}`
+      : null;
 
   return (
     <div className="min-h-dvh bg-slate-50 p-6">
