@@ -14,26 +14,83 @@ export async function ensureStartDateTask(input: {
   if (authErr) throw authErr;
   if (!auth.user) throw new Error('Not authenticated');
 
-  // Ensure the start-date task exists (creates if missing)
+  const admin = supabaseAdmin();
+
+  // Allow up to 2 tasks for the same day by using 2 internal slots.
+  const SLOT_PRIMARY = '2359';
+  const SLOT_SECONDARY = '2358';
+
+  // Ensure primary exists
   await runBackfill({
     vessel_id: input.vessel_id,
     template_id: input.template_id,
     start_date: input.start_date,
     end_date: input.start_date,
+    due_slot: SLOT_PRIMARY,
   });
 
-  const admin = supabaseAdmin();
-  const { data: task, error: tErr } = await admin
+  // Check which slots already exist for this day
+  const { data: existing, error: exErr } = await admin
     .from('tasks')
-    .select('id')
+    .select('id,due_slot')
     .eq('vessel_id', input.vessel_id)
     .eq('template_id', input.template_id)
     .eq('recorded_date', input.start_date)
-    .eq('due_slot', '2359')
-    .single();
-  if (tErr) throw new Error(tErr.message);
+    .in('due_slot', [SLOT_PRIMARY, SLOT_SECONDARY]);
+  if (exErr) throw new Error(exErr.message);
 
-  return { ok: true, taskId: task.id as string };
+  const bySlot = new Map<string, string>();
+  for (const row of existing ?? []) bySlot.set(row.due_slot as string, row.id as string);
+
+  // Choose the next available slot
+  if (!bySlot.has(SLOT_PRIMARY)) {
+    // Shouldn't happen because we just ensured it, but keep safe.
+    throw new Error('Failed to create primary task slot');
+  }
+
+  // Hard cap: max 2 per day
+  if (bySlot.has(SLOT_SECONDARY)) {
+    throw new Error('Max 2 logs per day for the same form/date');
+  }
+
+  if (!bySlot.has(SLOT_SECONDARY)) {
+    // First click should use primary; second click creates secondary.
+    // If primary already used as a source today, create secondary.
+    const { count: reqCount, error: rcErr } = await admin
+      .from('form_fields')
+      .select('id', { count: 'exact', head: true })
+      .eq('template_id', input.template_id)
+      .eq('required', true);
+    if (rcErr) throw new Error(rcErr.message);
+
+    const { data: created, error: cErr } = await admin
+      .from('tasks')
+      .insert({
+        vessel_id: input.vessel_id,
+        template_id: input.template_id,
+        status: 'Open',
+        due_type: 'Scheduled',
+        recorded_date: input.start_date,
+        due_slot: SLOT_SECONDARY,
+        due_at: `${input.start_date}T23:58:00-06:00`,
+        is_backfilled: true,
+        week_start_date: null,
+        required_count: reqCount ?? 0,
+        answered_count: 0,
+      })
+      .select('id')
+      .single();
+    if (cErr) throw new Error(cErr.message);
+    bySlot.set(SLOT_SECONDARY, created.id as string);
+  }
+
+  // Return the *newest* available slot for filling: prefer secondary if it was just created.
+  const chosen = bySlot.get(SLOT_SECONDARY) ?? bySlot.get(SLOT_PRIMARY);
+  if (!chosen) throw new Error('Could not determine taskId');
+
+  // Cap is 2: if both slots exist and user tries again, they would reuse secondary.
+  // (UI will be updated later to show clearer "Entry #1/#2".)
+  return { ok: true, taskId: chosen };
 }
 
 export async function generatePrefilledDrafts(input: {
@@ -51,6 +108,15 @@ export async function generatePrefilledDrafts(input: {
   if (!auth.user) throw new Error('Not authenticated');
 
   const admin = supabaseAdmin();
+
+  const { data: sourceTask, error: stErr } = await admin
+    .from('tasks')
+    .select('id,due_slot')
+    .eq('id', input.source_task_id)
+    .maybeSingle();
+  if (stErr) throw new Error(stErr.message);
+  if (!sourceTask?.id) throw new Error('Source task not found');
+  const dueSlot = (sourceTask.due_slot as string) || '2359';
 
   // Find source submission (prefer Submitted, else Draft)
   const { data: sourceSub, error: sErr } = await admin
@@ -79,6 +145,7 @@ export async function generatePrefilledDrafts(input: {
     start_date: input.start_date,
     end_date: input.end_date,
     cadence: input.cadence ?? 'daily',
+    due_slot: dueSlot,
   });
 
   const cadence: BackfillCadence = input.cadence ?? 'daily';
@@ -100,7 +167,7 @@ export async function generatePrefilledDrafts(input: {
     .eq('vessel_id', input.vessel_id)
     .eq('template_id', input.template_id)
     .in('recorded_date', targetDates)
-    .eq('due_slot', '2359')
+    .eq('due_slot', dueSlot)
     .order('recorded_date', { ascending: true });
   if (tErr) throw new Error(tErr.message);
 
@@ -193,6 +260,7 @@ export async function runBackfill(input: {
   start_date: string;
   end_date: string;
   cadence?: BackfillCadence;
+  due_slot?: string;
 }) {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
@@ -227,6 +295,9 @@ export async function runBackfill(input: {
   };
 
   const rows: TaskRow[] = [];
+  const dueSlot = input.due_slot ?? '2359';
+  const dueTime = dueSlot === '2358' ? '23:58:00' : '23:59:00';
+
   for (const ymd of dates) {
     rows.push({
       vessel_id: input.vessel_id,
@@ -234,9 +305,9 @@ export async function runBackfill(input: {
       status: 'Open',
       due_type: 'Scheduled',
       recorded_date: ymd,
-      due_slot: '2359',
+      due_slot: dueSlot,
       // MVP fixed offset; good enough until we add DST logic
-      due_at: `${ymd}T23:59:00-06:00`,
+      due_at: `${ymd}T${dueTime}-06:00`,
       is_backfilled: true,
       week_start_date: null,
       required_count: reqCount ?? 0,
