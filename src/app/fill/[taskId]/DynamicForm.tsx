@@ -73,15 +73,10 @@ export default function DynamicForm({
     []
   );
 
-  const timeOptions = useMemo(() => {
-    const opts: string[] = [''];
-    for (let mins = 0; mins < 24 * 60; mins += 5) {
-      const hh = String(Math.floor(mins / 60)).padStart(2, '0');
-      const mm = String(mins % 60).padStart(2, '0');
-      opts.push(`${hh}:${mm}`);
-    }
-    return opts;
-  }, []);
+  const timeOptions = useMemo(
+    () => ['', '00:00', '06:00', '12:00', '18:00', '23:59'],
+    []
+  );
 
   function setSave(
     fieldId: string,
