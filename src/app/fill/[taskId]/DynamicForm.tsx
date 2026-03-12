@@ -58,6 +58,21 @@ export default function DynamicForm({
     }
   );
 
+  const employeeNames = useMemo(
+    () => [
+      'DEWANDE RAGLEN',
+      'CHARLES CROSBY',
+      'CHARLES ROSE',
+      'ANDRES MORALES',
+      'ORBIE CROSBY',
+      'CARLOS BERLANGA',
+      'RICHARD WASHBURN',
+      'ADRIAN BROWN',
+      'JOHN EPPS',
+    ],
+    []
+  );
+
   const timeOptions = useMemo(() => {
     const opts: string[] = [''];
     for (let mins = 0; mins < 24 * 60; mins += 5) {
@@ -111,10 +126,17 @@ export default function DynamicForm({
         ))}
       </datalist>
 
+      <datalist id="employee-names">
+        {employeeNames.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
+
       <div className="divide-y">
         {fields.map((f) => {
         const a = byField.get(f.id);
         const label = f.qnum ? `${f.qnum} ${f.label}` : f.label;
+        const isNameField = /\bname\b|signature|crew member|captain|engineer/i.test(f.label);
 
         if (f.field_type === 'section') {
           return (
@@ -171,6 +193,7 @@ export default function DynamicForm({
                 <input
                   defaultValue={a?.value_text ?? ''}
                   type={f.field_type === 'number' ? 'number' : 'text'}
+                  list={f.field_type === 'text' && isNameField ? 'employee-names' : undefined}
                   placeholder={
                     f.field_type === 'number'
                       ? 'Enter a number'
