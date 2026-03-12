@@ -27,10 +27,19 @@ export default async function TasksPage({
   searchParams: Promise<{ vesselId?: string; segment?: Segment }>;
 }) {
   const sp = await searchParams;
-  const segment: Segment = sp.segment ?? 'this_week';
 
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
+
+  const isCrew = (auth.user?.email ?? '').toLowerCase().startsWith('crew_');
+  const canSeeAdminBackfill = Boolean(auth.user) && !isCrew;
+
+  const requestedSegment: Segment = sp.segment ?? 'this_week';
+  const segment: Segment = !canSeeAdminBackfill && requestedSegment === 'backfill'
+    ? 'this_week'
+    : requestedSegment;
+
+  // NOTE: auth is already loaded above
 
   const { data: vessels } = await supabase
     .from('vessels')
@@ -207,9 +216,9 @@ export default async function TasksPage({
             <div className="rounded-2xl border bg-white p-4">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {(
-                  ((auth.user?.email ?? '').toLowerCase().startsWith('crew_')
-                    ? (['this_week', 'beyond', 'on_demand', 'history'] as Segment[])
-                    : (['this_week', 'beyond', 'on_demand', 'backfill', 'history'] as Segment[]))
+                  (canSeeAdminBackfill
+                    ? (['this_week', 'beyond', 'on_demand', 'backfill', 'history'] as Segment[])
+                    : (['this_week', 'beyond', 'on_demand', 'history'] as Segment[]))
                 ).map((seg) => (
                   <Link
                     key={seg}
