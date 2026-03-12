@@ -136,7 +136,7 @@ export default function DynamicForm({
         {fields.map((f) => {
         const a = byField.get(f.id);
         const label = f.qnum ? `${f.qnum} ${f.label}` : f.label;
-        const isNameField = /\bname\b|signature|crew member|captain|engineer/i.test(f.label);
+        const isNameField = /\bname\b|signature|crew member|captain|engineer|deckhand/i.test(f.label);
 
         if (f.field_type === 'section') {
           return (
