@@ -49,7 +49,7 @@ export default async function TasksPage({
     )
     .eq('vessel_id', vesselId ?? '')
     .order('recorded_date', { ascending: false })
-    .limit(100);
+    .limit(segment === 'history' ? 1000 : 100);
 
   if (segment === 'history') {
     q = q.eq('status', 'Submitted');
