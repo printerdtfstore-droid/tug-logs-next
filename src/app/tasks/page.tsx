@@ -130,7 +130,7 @@ export default async function TasksPage({
               Documents
             </Link>
 
-            {auth.user ? (
+            {auth.user && !(auth.user.email ?? '').toLowerCase().startsWith('crew_') ? (
               <Link
                 href="/admin/import"
                 className="block rounded-xl px-3 py-2 opacity-90 hover:bg-white/10"
@@ -207,7 +207,9 @@ export default async function TasksPage({
             <div className="rounded-2xl border bg-white p-4">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {(
-                  ['this_week', 'beyond', 'on_demand', 'backfill', 'history'] as Segment[]
+                  ((auth.user?.email ?? '').toLowerCase().startsWith('crew_')
+                    ? (['this_week', 'beyond', 'on_demand', 'history'] as Segment[])
+                    : (['this_week', 'beyond', 'on_demand', 'backfill', 'history'] as Segment[]))
                 ).map((seg) => (
                   <Link
                     key={seg}
@@ -320,11 +322,13 @@ export default async function TasksPage({
                 </div>
               )}
 
-              <div className="mt-4 text-sm">
-                <Link className="underline" href="/admin/backfill">
-                  Admin: Backfill
-                </Link>
-              </div>
+              {auth.user && !(auth.user.email ?? '').toLowerCase().startsWith('crew_') ? (
+                <div className="mt-4 text-sm">
+                  <Link className="underline" href="/admin/backfill">
+                    Admin: Backfill
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </section>
         </main>

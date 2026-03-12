@@ -28,6 +28,23 @@ export default async function AdminImportPage({
     );
   }
 
+  const email = auth.user.email ?? '';
+  const isCrew = email.toLowerCase().startsWith('crew_');
+  if (isCrew) {
+    return (
+      <div className="min-h-dvh bg-slate-50 p-6">
+        <div className="mx-auto max-w-2xl rounded-2xl border bg-white p-6">
+          <h1 className="text-xl font-black">Admin Import</h1>
+          <p className="mt-2 text-sm text-slate-600">Not authorized.</p>
+          <div className="mt-4">
+            <Link className="underline" href="/tasks">
+              Back to logs
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-slate-50 p-6">
