@@ -8,7 +8,7 @@ import { generatePrefilledDrafts, type BackfillCadence } from './actions';
 export default async function AdminBackfillPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
@@ -58,7 +58,7 @@ export default async function AdminBackfillPage({
     .eq('active', true)
     .order('code');
 
-  const sp = searchParams ?? {};
+  const sp = (await searchParams) ?? {};
   const sourceTaskId = typeof sp.sourceTaskId === 'string' ? sp.sourceTaskId : null;
   const vessel_id = typeof sp.vessel_id === 'string' ? sp.vessel_id : null;
   const template_id = typeof sp.template_id === 'string' ? sp.template_id : null;
@@ -88,6 +88,16 @@ export default async function AdminBackfillPage({
     end_date &&
     cadence
   ) {
+    const clean = new URL('/admin/backfill', 'http://local');
+    clean.searchParams.set('sourceTaskId', sourceTaskId);
+    clean.searchParams.set('vessel_id', vessel_id);
+    clean.searchParams.set('template_id', template_id);
+    clean.searchParams.set('start_date', start_date);
+    clean.searchParams.set('end_date', end_date);
+    clean.searchParams.set('cadence', cadence);
+    clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
+
+    let redirectTarget: string;
     try {
       const res = await generatePrefilledDrafts({
         vessel_id,
@@ -99,34 +109,21 @@ export default async function AdminBackfillPage({
         auto_submit: auto_submit ?? false,
       });
 
-      const clean = new URL('/admin/backfill', 'http://local');
-      clean.searchParams.set('sourceTaskId', sourceTaskId);
-      clean.searchParams.set('vessel_id', vessel_id);
-      clean.searchParams.set('template_id', template_id);
-      clean.searchParams.set('start_date', start_date);
-      clean.searchParams.set('end_date', end_date);
-      clean.searchParams.set('cadence', cadence);
-      clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
       clean.searchParams.set('clone_ok', '1');
       clean.searchParams.set('tasksEnsured', String(res.tasksEnsured));
       clean.searchParams.set('draftsPrefilled', String(res.draftsPrefilled));
       clean.searchParams.set('tasksAutoSubmitted', String(res.tasksAutoSubmitted));
-
-      redirect(clean.pathname + clean.search);
+      redirectTarget = clean.pathname + clean.search;
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Clone failed';
-      const clean = new URL('/admin/backfill', 'http://local');
-      clean.searchParams.set('sourceTaskId', sourceTaskId);
-      clean.searchParams.set('vessel_id', vessel_id);
-      clean.searchParams.set('template_id', template_id);
-      clean.searchParams.set('start_date', start_date);
-      clean.searchParams.set('end_date', end_date);
-      clean.searchParams.set('cadence', cadence);
-      clean.searchParams.set('auto_submit', (auto_submit ?? false) ? '1' : '0');
       clean.searchParams.set('clone_ok', '0');
       clean.searchParams.set('clone_error', msg);
-      redirect(clean.pathname + clean.search);
+      redirectTarget = clean.pathname + clean.search;
     }
+
+    // redirect() must be called outside try/catch: it works by throwing,
+    // and a catch-all catch block above would otherwise swallow it.
+    redirect(redirectTarget);
   }
 
   const initialMsg = clone_ok
