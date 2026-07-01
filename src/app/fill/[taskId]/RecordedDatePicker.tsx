@@ -40,7 +40,7 @@ export default function RecordedDatePicker({
                   const res = await updateRecordedDate({ taskId, recordedDate: next });
                   const redirectId = (res as unknown as { redirectTaskId?: string }).redirectTaskId;
                   if (redirectId) {
-                    window.location.href = `/fill/${encodeURIComponent(redirectId)}`;
+                    window.location.href = `/fill/${encodeURIComponent(redirectId)}${window.location.search}`;
                   } else {
                     window.location.reload();
                   }
