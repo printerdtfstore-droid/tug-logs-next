@@ -65,7 +65,7 @@ export default function OnDemandTemplates({
                 {t.code} {t.title}
               </div>
               <div className="mt-1 text-xs text-slate-500">
-                Category: {t.category ?? 'â'}
+                Category: {t.category ?? '—'}
               </div>
             </div>
             <button
