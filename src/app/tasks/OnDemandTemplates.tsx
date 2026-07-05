@@ -65,7 +65,7 @@ export default function OnDemandTemplates({
                 {t.code} {t.title}
               </div>
               <div className="mt-1 text-xs text-slate-500">
-                Category: {t.category ?? '—'}
+                Category: {t.category ?? 'â'}
               </div>
             </div>
             <button
@@ -80,6 +80,10 @@ export default function OnDemandTemplates({
                       templateId: t.id,
                       recordedDate: date,
                     });
+                    if ('error' in res) {
+                      window.location.href = '/login';
+                      return;
+                    }
                     window.location.href = `/fill/${encodeURIComponent(res.taskId)}`;
                   } catch (e: unknown) {
                     setErrorMsg(e instanceof Error ? e.message : 'Failed to start');
