@@ -80,6 +80,10 @@ export default function OnDemandTemplates({
                       templateId: t.id,
                       recordedDate: date,
                     });
+                    if ('error' in res) {
+                      window.location.href = '/login';
+                      return;
+                    }
                     window.location.href = `/fill/${encodeURIComponent(res.taskId)}`;
                   } catch (e: unknown) {
                     setErrorMsg(e instanceof Error ? e.message : 'Failed to start');

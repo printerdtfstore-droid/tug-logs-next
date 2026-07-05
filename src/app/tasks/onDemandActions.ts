@@ -9,7 +9,7 @@ export async function startOnDemand(input: {
 }) {
   const supabase = await supabaseServer();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) throw new Error('Not authenticated');
+  if (!auth.user) return { error: 'not_authenticated' as const };
 
   // Create/find task
   const { data: existing, error: findErr } = await supabase
